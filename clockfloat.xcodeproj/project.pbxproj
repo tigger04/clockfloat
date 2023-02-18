@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6BFC217529A0494200AD53CA /* clockfloatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFC217429A0494200AD53CA /* clockfloatApp.swift */; };
-		6BFC217729A0494200AD53CA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFC217629A0494200AD53CA /* ContentView.swift */; };
+		6B22EF4D29A04CCD0066B418 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22EF4C29A04CCD0066B418 /* main.swift */; };
 		6BFC217929A0494300AD53CA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6BFC217829A0494300AD53CA /* Assets.xcassets */; };
 		6BFC217C29A0494300AD53CA /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6BFC217B29A0494300AD53CA /* Preview Assets.xcassets */; };
 		6BFC218729A0494300AD53CA /* clockfloatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFC218629A0494300AD53CA /* clockfloatTests.swift */; };
 		6BFC219129A0494300AD53CA /* clockfloatUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFC219029A0494300AD53CA /* clockfloatUITests.swift */; };
 		6BFC219329A0494300AD53CA /* clockfloatUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFC219229A0494300AD53CA /* clockfloatUITestsLaunchTests.swift */; };
+		6BFC21A029A0497700AD53CA /* Clock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFC219F29A0497700AD53CA /* Clock.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,9 +34,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		6B22EF4C29A04CCD0066B418 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		6BFC217129A0494200AD53CA /* clockfloat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = clockfloat.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		6BFC217429A0494200AD53CA /* clockfloatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = clockfloatApp.swift; sourceTree = "<group>"; };
-		6BFC217629A0494200AD53CA /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		6BFC217829A0494300AD53CA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6BFC217B29A0494300AD53CA /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		6BFC217D29A0494300AD53CA /* clockfloat.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = clockfloat.entitlements; sourceTree = "<group>"; };
@@ -45,6 +44,7 @@
 		6BFC218C29A0494300AD53CA /* clockfloatUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = clockfloatUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6BFC219029A0494300AD53CA /* clockfloatUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = clockfloatUITests.swift; sourceTree = "<group>"; };
 		6BFC219229A0494300AD53CA /* clockfloatUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = clockfloatUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		6BFC219F29A0497700AD53CA /* Clock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Clock.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,8 +95,8 @@
 		6BFC217329A0494200AD53CA /* clockfloat */ = {
 			isa = PBXGroup;
 			children = (
-				6BFC217429A0494200AD53CA /* clockfloatApp.swift */,
-				6BFC217629A0494200AD53CA /* ContentView.swift */,
+				6BFC219F29A0497700AD53CA /* Clock.swift */,
+				6B22EF4C29A04CCD0066B418 /* main.swift */,
 				6BFC217829A0494300AD53CA /* Assets.xcassets */,
 				6BFC217D29A0494300AD53CA /* clockfloat.entitlements */,
 				6BFC217A29A0494300AD53CA /* Preview Content */,
@@ -259,8 +259,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6BFC217729A0494200AD53CA /* ContentView.swift in Sources */,
-				6BFC217529A0494200AD53CA /* clockfloatApp.swift in Sources */,
+				6BFC21A029A0497700AD53CA /* Clock.swift in Sources */,
+				6B22EF4D29A04CCD0066B418 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
