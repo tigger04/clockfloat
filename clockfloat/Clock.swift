@@ -48,7 +48,7 @@ class Clock: NSObject, NSApplicationDelegate {
 
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-//        self.initDater()
+        self.initDater()
         self.initTimer()
         
         screenW = NSScreen.main!.frame.width
@@ -69,7 +69,7 @@ class Clock: NSObject, NSApplicationDelegate {
         
 //        label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: 1-(1/3)*(1/3))
         label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: 0.6)
-        label.sizeToFit()
+//        label.sizeToFit()
 
         let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
             label.stringValue = formatter.string(from: Date())
@@ -88,7 +88,25 @@ class Clock: NSObject, NSApplicationDelegate {
             defer       : true
         )
 
-        window.contentView = label
+        // hack to get the damned thing vertically centered
+        // thanks for nothing Cocoa
+        let cell = NSTableCellView()
+        cell.frame = NSRect(x: 0, y: 0, width: rect.width, height: rect.height)
+        label.frame = cell.frame
+//        tf.stringValue = "MyTextfield"
+        label.alignment = .center
+
+        let stringHeight: CGFloat = label.fittingSize.height
+        let frame = label.frame
+        var titleRect:  NSRect = label.cell!.titleRect(forBounds: frame)
+
+        titleRect.size.height = rect.height
+        titleRect.size.width = rect.width
+        titleRect.origin.y = frame.size.height / 2  - label.lastBaselineOffsetFromBottom - label.font!.xHeight / 2
+        label.frame = titleRect
+        cell.addSubview(label)
+        
+        window.contentView = cell
         window.ignoresMouseEvents = true
         window.level = .floating
         window.collectionBehavior = .canJoinAllSpaces
@@ -109,9 +127,9 @@ class Clock: NSObject, NSApplicationDelegate {
 
         self.dater = self.initWindow(
             rect     : NSMakeRect(screenW - dateW - xmargin,
-                                  screenH - timeH - dateH - ymargin,
-                                  dateW,
-                                  dateH),
+                                  screenH - dateH - dateH - ymargin,
+                                  label.fittingSize.width,
+                                  label.fittingSize.height),
             label    : label
         )
     }
@@ -126,10 +144,10 @@ class Clock: NSObject, NSApplicationDelegate {
         )
 
         self.timer = self.initWindow(
-            rect     : NSMakeRect(screenW - timeW - xmargin,
-                                  screenH - timeH - ymargin,
-                                  label.fittingSize.width,
-                                  label.fittingSize.height),
+            rect     : NSMakeRect(500,
+                                  500,
+                                  label.fittingSize.width * 2,
+                                  label.fittingSize.height * 2),
             label    : label
         )
     }

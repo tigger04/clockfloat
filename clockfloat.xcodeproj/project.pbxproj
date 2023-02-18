@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		6B22EF4D29A04CCD0066B418 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22EF4C29A04CCD0066B418 /* main.swift */; };
+		6B6C4C4F29A1132B0066C295 /* VerticallyCenteredTextFieldCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B6C4C4E29A1132B0066C295 /* VerticallyCenteredTextFieldCell.swift */; };
 		6BFC217929A0494300AD53CA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6BFC217829A0494300AD53CA /* Assets.xcassets */; };
 		6BFC217C29A0494300AD53CA /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6BFC217B29A0494300AD53CA /* Preview Assets.xcassets */; };
 		6BFC218729A0494300AD53CA /* clockfloatTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFC218629A0494300AD53CA /* clockfloatTests.swift */; };
@@ -35,6 +36,7 @@
 
 /* Begin PBXFileReference section */
 		6B22EF4C29A04CCD0066B418 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		6B6C4C4E29A1132B0066C295 /* VerticallyCenteredTextFieldCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerticallyCenteredTextFieldCell.swift; sourceTree = "<group>"; };
 		6BFC217129A0494200AD53CA /* clockfloat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = clockfloat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6BFC217829A0494300AD53CA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6BFC217B29A0494300AD53CA /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -95,6 +97,7 @@
 		6BFC217329A0494200AD53CA /* clockfloat */ = {
 			isa = PBXGroup;
 			children = (
+				6B6C4C4E29A1132B0066C295 /* VerticallyCenteredTextFieldCell.swift */,
 				6BFC219F29A0497700AD53CA /* Clock.swift */,
 				6B22EF4C29A04CCD0066B418 /* main.swift */,
 				6BFC217829A0494300AD53CA /* Assets.xcassets */,
@@ -261,6 +264,7 @@
 			files = (
 				6BFC21A029A0497700AD53CA /* Clock.swift in Sources */,
 				6B22EF4D29A04CCD0066B418 /* main.swift in Sources */,
+				6B6C4C4F29A1132B0066C295 /* VerticallyCenteredTextFieldCell.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
