@@ -40,8 +40,8 @@ class Clock: NSObject, NSApplicationDelegate {
     
     var timeFont : String = "New"
     var timeFontSize : CGFloat = 30
-    var timeW : CGFloat = 100
-    var timeH : CGFloat = 40
+    var timeW : CGFloat = 1000
+    var timeH : CGFloat = 1000
     
     var xmargin : CGFloat = 10
     var ymargin : CGFloat = 10
@@ -66,8 +66,10 @@ class Clock: NSObject, NSApplicationDelegate {
         label.isEditable = false
         label.drawsBackground = false
         label.alignment = .center
+        
 //        label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: 1-(1/3)*(1/3))
         label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: 0.6)
+        label.sizeToFit()
 
         let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
             label.stringValue = formatter.string(from: Date())
@@ -90,7 +92,7 @@ class Clock: NSObject, NSApplicationDelegate {
         window.ignoresMouseEvents = true
         window.level = .floating
         window.collectionBehavior = .canJoinAllSpaces
-        window.backgroundColor = NSColor(red: 0, green: 0, blue: 0, alpha: 1/6)
+        window.backgroundColor = NSColor(red: 0, green: 0, blue: 0, alpha: 1/3)
         window.orderFrontRegardless()
 //        window.isMovableByWindowBackground = true
         
@@ -126,8 +128,8 @@ class Clock: NSObject, NSApplicationDelegate {
         self.timer = self.initWindow(
             rect     : NSMakeRect(screenW - timeW - xmargin,
                                   screenH - timeH - ymargin,
-                                  timeW,
-                                  timeH),
+                                  label.fittingSize.width,
+                                  label.fittingSize.height),
             label    : label
         )
     }
