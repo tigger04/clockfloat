@@ -34,26 +34,33 @@ class Clock: NSObject, NSApplicationDelegate {
     var screenH : CGFloat = NSScreen.main!.frame.height
     
     var dateFont : String = "New"
-    var dateFontSize : CGFloat = 16
+    var dateFontSize : CGFloat = 14
     var dateW : CGFloat = 100
     var dateH : CGFloat = 20
     
     var timeFont : String = "New"
-    var timeFontSize : CGFloat = 30
+    var timeFontSize : CGFloat = 22
     var timeW : CGFloat = 1000
     var timeH : CGFloat = 1000
     
-    var xmargin : CGFloat = 10
-    var ymargin : CGFloat = 10
+    var xpadding : CGFloat = 10
+    var ypadding : CGFloat = 10
+    var wMarginRatio : CGFloat = 1.1
+    var hMarginRatio : CGFloat = 1.3
+    
+    var orientation : Int = 2
+    // 1 = topleft, 2 = topright, 3 = bottomright, 4 = bottomleft
 
+//    var clockOrigin : CGPoint = CGPoint(x: 0 , y: 0)
+    var clockRect : CGRect = CGRect(x:0, y:0, width: 0, height: 0)
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        self.initDater()
-        self.initTimer()
         
         screenW = NSScreen.main!.frame.width
         screenH = NSScreen.main!.frame.height
         
+        self.initTimer()
+        self.initDater()
     }
 
     func initLabel(font: NSFont, format: String, interval: TimeInterval) -> NSTextField {
@@ -68,7 +75,7 @@ class Clock: NSObject, NSApplicationDelegate {
         label.alignment = .center
         
 //        label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: 1-(1/3)*(1/3))
-        label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: 0.6)
+        label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: 0.5)
 //        label.sizeToFit()
 
         let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
@@ -102,19 +109,27 @@ class Clock: NSObject, NSApplicationDelegate {
 
         titleRect.size.height = rect.height
         titleRect.size.width = rect.width
-        titleRect.origin.y = frame.size.height / 2  - label.lastBaselineOffsetFromBottom - label.font!.xHeight / 2
+//        titleRect.origin.y = frame.size.height / 2  - label.lastBaselineOffsetFromBottom - label.font!.xHeight / 2
+        titleRect.origin.y = frame.origin.y - ( frame.size.height - stringHeight ) / 2
         label.frame = titleRect
         cell.addSubview(label)
         
         window.contentView = cell
+//        window.ignoresMouseEvents = false
         window.ignoresMouseEvents = true
+//        window.isMovableByWindowBackground = true
         window.level = .floating
         window.collectionBehavior = .canJoinAllSpaces
-        window.backgroundColor = NSColor(red: 0, green: 0, blue: 0, alpha: 1/3)
+        window.backgroundColor = NSColor(red: 0, green: 0, blue: 0, alpha: 0.25)
         window.orderFrontRegardless()
 //        window.isMovableByWindowBackground = true
         
         return window
+    }
+    
+    func mouseEntered(with event: NSEvent) {
+        // this needs to move to a custom NSView or something
+        orientation = Int( orientation + 1 ) % 4
     }
 
     func initDater() {
@@ -124,12 +139,41 @@ class Clock: NSObject, NSApplicationDelegate {
             format   : "E d",
             interval : 10
         )
+        
+        let width = clockRect.width
+        let height = label.fittingSize.height * hMarginRatio
+        
+        var x : CGFloat
+        var y : CGFloat
+        
+        switch orientation {
+            
+            case 1: // topleft
+                x = clockRect.minX
+                y = clockRect.minY - height
+            
+            case 2: // topright
+                x = clockRect.minX
+                y = clockRect.minY - height
+            
+            case 3: // bottomright
+                x = clockRect.minX
+                y = clockRect.minY + clockRect.height
 
+            case 4: // bottomleft
+                x = clockRect.minX
+                y = clockRect.minY + clockRect.height
+                
+            default:
+                exit(1)
+                
+        }
+        
         self.dater = self.initWindow(
-            rect     : NSMakeRect(screenW - dateW - xmargin,
-                                  screenH - dateH - dateH - ymargin,
-                                  label.fittingSize.width,
-                                  label.fittingSize.height),
+            rect     : NSMakeRect(x,
+                                  y,
+                                  width,
+                                  height),
             label    : label
         )
     }
@@ -142,12 +186,37 @@ class Clock: NSObject, NSApplicationDelegate {
             format   : "HH:mm",
             interval : 1
         )
-
+        
+        let width = label.fittingSize.width * wMarginRatio
+        let height = label.fittingSize.height * hMarginRatio
+        
+        var x : CGFloat
+        var y : CGFloat
+        
+        switch orientation {
+        case 1: // topleft
+            x = xpadding
+            y = screenH - height - ypadding
+        case 2: // topright
+            x = screenW - width - xpadding
+            y = screenH - height - ypadding
+        case 3: // bottomright
+            x = screenW - width - xpadding
+            y = ypadding
+        case 4: // bottomleft
+            x = xpadding
+            y = ypadding
+        default:
+            exit(1)
+        }
+        
+        clockRect = CGRect(x: x, y: y, width: width, height: height)
+        
         self.timer = self.initWindow(
-            rect     : NSMakeRect(500,
-                                  500,
-                                  label.fittingSize.width * 2,
-                                  label.fittingSize.height * 2),
+            rect     : NSMakeRect(x,
+                                  y,
+                                  width,
+                                  height),
             label    : label
         )
     }
