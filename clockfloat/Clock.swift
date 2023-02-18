@@ -30,10 +30,30 @@ import Cocoa
 class Clock: NSObject, NSApplicationDelegate {
     var dater : NSWindow?
     var timer : NSWindow?
+    var screenW : CGFloat = NSScreen.main!.frame.width
+    var screenH : CGFloat = NSScreen.main!.frame.height
+    
+    var dateFont : String = "New"
+    var dateFontSize : CGFloat = 16
+    var dateW : CGFloat = 100
+    var dateH : CGFloat = 20
+    
+    var timeFont : String = "New"
+    var timeFontSize : CGFloat = 30
+    var timeW : CGFloat = 100
+    var timeH : CGFloat = 40
+    
+    var xmargin : CGFloat = 10
+    var ymargin : CGFloat = 10
 
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        self.initDater()
+//        self.initDater()
         self.initTimer()
+        
+        screenW = NSScreen.main!.frame.width
+        screenH = NSScreen.main!.frame.height
+        
     }
 
     func initLabel(font: NSFont, format: String, interval: TimeInterval) -> NSTextField {
@@ -46,7 +66,8 @@ class Clock: NSObject, NSApplicationDelegate {
         label.isEditable = false
         label.drawsBackground = false
         label.alignment = .center
-        label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: 1-(1/3)*(1/3))
+//        label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: 1-(1/3)*(1/3))
+        label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: 0.6)
 
         let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
             label.stringValue = formatter.string(from: Date())
@@ -69,34 +90,44 @@ class Clock: NSObject, NSApplicationDelegate {
         window.ignoresMouseEvents = true
         window.level = .floating
         window.collectionBehavior = .canJoinAllSpaces
-        window.backgroundColor = NSColor(red: 0, green: 0, blue: 0, alpha: 1/3)
+        window.backgroundColor = NSColor(red: 0, green: 0, blue: 0, alpha: 1/6)
         window.orderFrontRegardless()
-
+//        window.isMovableByWindowBackground = true
+        
         return window
     }
 
     func initDater() {
         let label = self.initLabel(
-            font     : NSFont.monospacedDigitSystemFont(ofSize: 18, weight: .regular),
-            format   : "YYYY-MM-dd",
+//            font     : NSFont.monospacedDigitSystemFont(ofSize: 18, weight: .regular),
+            font     : NSFont(name: dateFont, size: dateFontSize)!,
+            format   : "E d",
             interval : 10
         )
 
         self.dater = self.initWindow(
-            rect     : NSMakeRect(1145, 477, 120, 23),
+            rect     : NSMakeRect(screenW - dateW - xmargin,
+                                  screenH - timeH - dateH - ymargin,
+                                  dateW,
+                                  dateH),
             label    : label
         )
     }
 
     func initTimer() {
+        
         let label = self.initLabel(
-            font     : NSFont.monospacedDigitSystemFont(ofSize: 36, weight: .regular),
+            //            font     : NSFont.monospacedDigitSystemFont(ofSize: 36, weight: .regular),
+            font     : NSFont(name: timeFont, size: timeFontSize)!,
             format   : "HH:mm",
             interval : 1
         )
 
         self.timer = self.initWindow(
-            rect     : NSMakeRect(1145, 428, 120, 46),
+            rect     : NSMakeRect(screenW - timeW - xmargin,
+                                  screenH - timeH - ymargin,
+                                  timeW,
+                                  timeH),
             label    : label
         )
     }
