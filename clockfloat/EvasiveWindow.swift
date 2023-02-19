@@ -22,18 +22,18 @@
 
 import Cocoa
 
-class EvasiveWindow: NSWindow {
+class EvasiveWindowController: NSViewController {
     var orientation : Int = 1
     
     var clockRect : CGRect = CGRect(x:0, y:0, width: 0, height: 0)
     var dateRect : CGRect = CGRect(x:0, y:0, width: 0, height: 0)
     
-    refresh() {
-        
-    }
-    
-    override func mouseEntered(with event: NSEvent) {
-        orientation = Int( orientation + 1 ) % 4
-        move()
-    }
+//    refresh() {
+//        
+//    }
+//    
+//    override func mouseEntered(with event: NSEvent) {
+//        orientation = Int( orientation + 1 ) % 4
+//        move()
+//    }
 }

@@ -43,7 +43,7 @@ class Clock: NSObject, NSApplicationDelegate {
     var wMarginRatio : CGFloat = 1.1
     var hMarginRatio : CGFloat = 1.3
     
-    var orientation : Int = 2
+    var orientation : Int = 3
     // 1 = topleft, 2 = topright, 3 = bottomright, 4 = bottomleft
 
 //    var clockOrigin : CGPoint = CGPoint(x: 0 , y: 0)
