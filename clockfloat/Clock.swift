@@ -20,11 +20,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// How to build:
-// $ swiftc -o clock -gnone -O -target x86_64-apple-macosx10.14 clock.swift
-// How to run:
-// $ ./clock
-
 import Cocoa
 
 class Clock: NSObject, NSApplicationDelegate {
@@ -53,6 +48,7 @@ class Clock: NSObject, NSApplicationDelegate {
 
 //    var clockOrigin : CGPoint = CGPoint(x: 0 , y: 0)
     var clockRect : CGRect = CGRect(x:0, y:0, width: 0, height: 0)
+    var Rect : CGRect = CGRect(x:0, y:0, width: 0, height: 0)
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
