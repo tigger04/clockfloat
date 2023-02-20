@@ -40,7 +40,7 @@ class EvasiveWindow: NSWindow {
     
     var orientation : Int = 3
     
-    var label : NSTextField = NSTextField()
+    var theLabel : NSTextField = NSTextField()
     
 //    override public init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool)
     public init(label: NSTextField) {
@@ -62,12 +62,19 @@ class EvasiveWindow: NSWindow {
         label.frame = titleRect
         cell.addSubview(label)
         
-        super.init( contentRect: titleRect,
+        let winWidth = self.theLabel.fittingSize.width * wMarginRatio
+        let winHeight = self.theLabel.fittingSize.height * hMarginRatio
+        
+        let winRect = NSRect(x:300, y:300,
+                             width: winWidth,
+                             height: winHeight)
+        
+        super.init( contentRect: winRect,
                     styleMask:   .borderless,
                     backing:     .buffered,
                     defer:       true)
         
-        self.label = label
+        self.theLabel = label
         
         self.contentView = cell
         self.ignoresMouseEvents = false
@@ -75,37 +82,40 @@ class EvasiveWindow: NSWindow {
         self.collectionBehavior = .canJoinAllSpaces
         self.backgroundColor = NSColor(red: 0, green: 0, blue: 0, alpha: 0.25)
         self.orderFrontRegardless()
-        
+//        self.move()
     }
     
     func move() {
-        let screenW = NSScreen.main!.frame.width
-        let screenH = NSScreen.main!.frame.height
-        
-        let width = self.label.fittingSize.width * wMarginRatio
-        let height = self.label.fittingSize.height * hMarginRatio
+        let screenW = self.screen?.frame.width ?? 0
+        let screenH = self.screen?.frame.height ?? 0
+//        let screenW = NSScreen.main!.frame.width
+//        let screenH = NSScreen.main!.frame.height
+        let width = self.frame.width
+        let height = self.frame.height
         
         var x : CGFloat
         var y : CGFloat
         
+        self.orientation = (orientation+1) % 4
+        
         switch orientation {
-        case 1: // topleft
+        case 0: // topleft
             x = xpadding
             y = screenH - height - ypadding
-        case 2: // topright
+        case 1: // topright
             x = screenW - width - xpadding
             y = screenH - height - ypadding
-        case 3: // bottomright
+        case 2: // bottomright
             x = screenW - width - xpadding
             y = ypadding
-        case 4: // bottomleft
+        case 3: // bottomleft
             x = xpadding
             y = ypadding
         default:
             exit(1)
         }
         
-        self.rect = NSMakeRect(x, y, width, height)
+        self.setFrameOrigin(NSPoint(x:x, y:y))
     }
     
     //    refresh() {
