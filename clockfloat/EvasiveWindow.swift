@@ -22,18 +22,98 @@
 
 import Cocoa
 
-class EvasiveWindowController: NSViewController {
-    var orientation : Int = 1
+class EvasiveWindow: NSWindow {
+
+    var screenW : CGFloat = NSScreen.main!.frame.width
+    var screenH : CGFloat = NSScreen.main!.frame.height
     
-    var clockRect : CGRect = CGRect(x:0, y:0, width: 0, height: 0)
-    var dateRect : CGRect = CGRect(x:0, y:0, width: 0, height: 0)
+    var dateFont : String = "New"
+    var dateFontSize : CGFloat = 14
     
-//    refresh() {
-//        
-//    }
-//    
-//    override func mouseEntered(with event: NSEvent) {
-//        orientation = Int( orientation + 1 ) % 4
+    var timeFont : String = "New"
+    var timeFontSize : CGFloat = 22
+    
+    var xpadding : CGFloat = 10
+    var ypadding : CGFloat = 10
+    var wMarginRatio : CGFloat = 1.1
+    var hMarginRatio : CGFloat = 1.3
+    
+    var orientation : Int = 3
+    
+    var label : NSTextField = NSTextField()
+    
+//    override public init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool)
+    public init(label: NSTextField) {
+        
+        // hack to get the damned thing vertically centered
+        // thanks for nothing Cocoa
+        let stringHeight: CGFloat = label.fittingSize.height
+        let cell = NSTableCellView()
+        cell.frame = NSRect(x: 0, y: 0, width: label.fittingSize.width, height: label.fittingSize.height)
+        label.frame = cell.frame
+        label.alignment = .center
+
+        let frame = label.frame
+        var titleRect:  NSRect = label.cell!.titleRect(forBounds: frame)
+
+        titleRect.size.height = label.fittingSize.height
+        titleRect.size.width = label.fittingSize.width
+        titleRect.origin.y = frame.origin.y - ( frame.size.height - stringHeight ) / 2
+        label.frame = titleRect
+        cell.addSubview(label)
+        
+        super.init( contentRect: titleRect,
+                    styleMask:   .borderless,
+                    backing:     .buffered,
+                    defer:       true)
+        
+        self.label = label
+        
+        self.contentView = cell
+        self.ignoresMouseEvents = false
+        self.level = .floating
+        self.collectionBehavior = .canJoinAllSpaces
+        self.backgroundColor = NSColor(red: 0, green: 0, blue: 0, alpha: 0.25)
+        self.orderFrontRegardless()
+        
+    }
+    
+    func move() {
+        let screenW = NSScreen.main!.frame.width
+        let screenH = NSScreen.main!.frame.height
+        
+        let width = self.label.fittingSize.width * wMarginRatio
+        let height = self.label.fittingSize.height * hMarginRatio
+        
+        var x : CGFloat
+        var y : CGFloat
+        
+        switch orientation {
+        case 1: // topleft
+            x = xpadding
+            y = screenH - height - ypadding
+        case 2: // topright
+            x = screenW - width - xpadding
+            y = screenH - height - ypadding
+        case 3: // bottomright
+            x = screenW - width - xpadding
+            y = ypadding
+        case 4: // bottomleft
+            x = xpadding
+            y = ypadding
+        default:
+            exit(1)
+        }
+        
+        self.rect = NSMakeRect(x, y, width, height)
+    }
+    
+    //    refresh() {
+    //
+    //    }
+    //
+    override func mouseEntered(with event: NSEvent) {
+        orientation = Int( orientation + 1 ) % 4
 //        move()
-//    }
+    }
 }

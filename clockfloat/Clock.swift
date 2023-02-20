@@ -23,20 +23,16 @@
 import Cocoa
 
 class Clock: NSObject, NSApplicationDelegate {
-    var dater : NSWindow?
-    var timer : NSWindow?
+    var dater : EvasiveWindow?
+    var timer : EvasiveWindow?
     var screenW : CGFloat = NSScreen.main!.frame.width
     var screenH : CGFloat = NSScreen.main!.frame.height
     
     var dateFont : String = "New"
     var dateFontSize : CGFloat = 14
-    var dateW : CGFloat = 100
-    var dateH : CGFloat = 20
     
     var timeFont : String = "New"
     var timeFontSize : CGFloat = 22
-    var timeW : CGFloat = 1000
-    var timeH : CGFloat = 1000
     
     var xpadding : CGFloat = 10
     var ypadding : CGFloat = 10
@@ -82,9 +78,43 @@ class Clock: NSObject, NSApplicationDelegate {
 
         return label
     }
+    
+    func initWindow(label: NSTextField) -> EvasiveWindow {
 
-    func initWindow(rect: NSRect, label: NSTextField) -> NSWindow {
-        let window = NSWindow(
+        let window = EvasiveWindow(label)
+
+        // hack to get the damned thing vertically centered
+        // thanks for nothing Cocoa
+        let stringHeight: CGFloat = label.fittingSize.height
+        let cell = NSTableCellView()
+        cell.frame = NSRect(x: 0, y: 0, width: label.fittingSize.width, height: label.fittingSize.height)
+        label.frame = cell.frame
+        label.alignment = .center
+
+        let frame = label.frame
+        var titleRect:  NSRect = label.cell!.titleRect(forBounds: frame)
+
+        titleRect.size.height = label.fittingSize.height
+        titleRect.size.width = label.fittingSize.width
+//        titleRect.origin.y = frame.size.height / 2  - label.lastBaselineOffsetFromBottom - label.font!.xHeight / 2
+        titleRect.origin.y = frame.origin.y - ( frame.size.height - stringHeight ) / 2
+        label.frame = titleRect
+        cell.addSubview(label)
+        
+        window.contentView = cell
+        window.ignoresMouseEvents = false
+//        window.ignoresMouseEvents = true
+        window.isMovableByWindowBackground = true
+        window.level = .floating
+        window.collectionBehavior = .canJoinAllSpaces
+        window.backgroundColor = NSColor(red: 0, green: 0, blue: 0, alpha: 0.25)
+        window.orderFrontRegardless()
+        
+        return window
+    }
+
+    func initWindow(rect: NSRect, label: NSTextField) -> EvasiveWindow {
+        let window = EvasiveWindow(
             contentRect : rect,
             styleMask   : .borderless,
             backing     : .buffered,
@@ -123,14 +153,8 @@ class Clock: NSObject, NSApplicationDelegate {
         return window
     }
     
-    func mouseEntered(with event: NSEvent) {
-        // this needs to move to a custom NSView or something
-        orientation = Int( orientation + 1 ) % 4
-    }
-
     func initDater() {
         let label = self.initLabel(
-//            font     : NSFont.monospacedDigitSystemFont(ofSize: 18, weight: .regular),
             font     : NSFont(name: dateFont, size: dateFontSize)!,
             format   : "E d",
             interval : 10
