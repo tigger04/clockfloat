@@ -45,6 +45,7 @@ class EvasiveWindow: NSWindow {
 //    override public init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool)
     public init(label: NSTextField) {
         
+        
         // hack to get the damned thing vertically centered
         // thanks for nothing Cocoa
         let stringHeight: CGFloat = label.fittingSize.height
