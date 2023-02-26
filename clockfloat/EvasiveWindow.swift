@@ -35,8 +35,8 @@ class EvasiveWindow: NSWindow {
     
     var xpadding : CGFloat = 10
     var ypadding : CGFloat = 10
-    var wMarginRatio : CGFloat = 1.1
-    var hMarginRatio : CGFloat = 1.3
+    var wMarginRatio : CGFloat = 3.7
+    var hMarginRatio : CGFloat = 3.7
     
     var orientation : Int = 3
     
@@ -45,28 +45,15 @@ class EvasiveWindow: NSWindow {
 //    override public init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool)
     public init(label: NSTextField) {
         
+//        super.init( contentRect: NSMakeRect(300,300,300,300),
+//                    styleMask:   .borderless,
+//                    backing:     .buffered,
+//                    defer:       true)
+//
+        let winWidth = label.fittingSize.width * wMarginRatio
+        let winHeight = label.fittingSize.height * hMarginRatio
         
-        // hack to get the damned thing vertically centered
-        // thanks for nothing Cocoa
-        let stringHeight: CGFloat = label.fittingSize.height
-        let cell = NSTableCellView()
-        cell.frame = NSRect(x: 0, y: 0, width: label.fittingSize.width, height: label.fittingSize.height)
-        label.frame = cell.frame
-        label.alignment = .center
-
-        let frame = label.frame
-        var titleRect:  NSRect = label.cell!.titleRect(forBounds: frame)
-
-        titleRect.size.height = label.fittingSize.height
-        titleRect.size.width = label.fittingSize.width
-        titleRect.origin.y = frame.origin.y - ( frame.size.height - stringHeight ) / 2
-        label.frame = titleRect
-        cell.addSubview(label)
-        
-        let winWidth = self.theLabel.fittingSize.width * wMarginRatio
-        let winHeight = self.theLabel.fittingSize.height * hMarginRatio
-        
-        let winRect = NSRect(x:300, y:300,
+        let winRect = NSRect(x:0, y:0,
                              width: winWidth,
                              height: winHeight)
         
@@ -74,6 +61,24 @@ class EvasiveWindow: NSWindow {
                     styleMask:   .borderless,
                     backing:     .buffered,
                     defer:       true)
+        
+        // hack to get the damned thing vertically centered
+        // thanks for nothing Cocoa
+        let stringHeight: CGFloat = label.fittingSize.height
+        let cell = NSTableCellView()
+        cell.frame = NSRect(x: 0, y: 0, width: winWidth, height: label.fittingSize.height)
+        label.frame = cell.frame
+        label.alignment = .center
+
+        let frame = label.frame
+        var titleRect:  NSRect = label.cell!.titleRect(forBounds: frame)
+
+//        titleRect.size.height = label.fittingSize.height
+//        titleRect.size.width = label.fittingSize.width
+        titleRect.origin.y = frame.origin.y + ( winHeight - stringHeight ) / 2
+        label.frame = titleRect
+        cell.addSubview(label)
+        
         
         self.theLabel = label
         
@@ -83,7 +88,7 @@ class EvasiveWindow: NSWindow {
         self.collectionBehavior = .canJoinAllSpaces
         self.backgroundColor = NSColor(red: 0, green: 0, blue: 0, alpha: 0.25)
         self.orderFrontRegardless()
-//        self.move()
+        self.move()
     }
     
     func move() {
@@ -117,6 +122,7 @@ class EvasiveWindow: NSWindow {
         }
         
         self.setFrameOrigin(NSPoint(x:x, y:y))
+//        self.setContentSize(NSSize(width: width, height: height))
     }
     
     //    refresh() {

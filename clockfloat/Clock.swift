@@ -47,7 +47,7 @@ class Clock: NSObject, NSApplicationDelegate {
 //        self.initDater()
     }
 
-    func initLabel(font: NSFont, format: String, interval: TimeInterval) -> NSTextField {
+    func initLabel(font: NSFont, format: String, interval: TimeInterval, dummytext: String) -> NSTextField {
         let formatter = DateFormatter()
         formatter.dateFormat = format
 
@@ -57,6 +57,7 @@ class Clock: NSObject, NSApplicationDelegate {
         label.isEditable = false
         label.drawsBackground = false
         label.alignment = .center
+        label.stringValue = dummytext
         
 //        label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: 1-(1/3)*(1/3))
         label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: 0.5)
@@ -80,9 +81,10 @@ class Clock: NSObject, NSApplicationDelegate {
 
     func initDater() {
         let label = self.initLabel(
-            font     : NSFont(name: dateFont, size: dateFontSize)!,
-            format   : "E d",
-            interval : 10
+            font      : NSFont(name: dateFont, size: dateFontSize)!,
+            format    : "E d",
+            interval  : 10,
+            dummytext : "XXX XX"
         )
         
 //        let width = clockRect.width
@@ -125,7 +127,9 @@ class Clock: NSObject, NSApplicationDelegate {
             //            font     : NSFont.monospacedDigitSystemFont(ofSize: 36, weight: .regular),
             font     : NSFont(name: timeFont, size: timeFontSize)!,
             format   : "HH:mm",
-            interval : 1
+            interval : 1,
+            dummytext: "99:99"
+
         )
 //
 //        let width = label.fittingSize.width * wMarginRatio
