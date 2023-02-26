@@ -44,7 +44,7 @@ class Clock: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
         self.initTimer()
-//        self.initDater()
+        self.initDater()
     }
 
     func initLabel(font: NSFont, format: String, interval: TimeInterval, dummytext: String) -> NSTextField {
@@ -72,9 +72,16 @@ class Clock: NSObject, NSApplicationDelegate {
         return label
     }
     
-    func initWindow(label: NSTextField) -> EvasiveWindow {
+    func initWindow(label: NSTextField, stickWin: EvasiveWindow, name: String) -> EvasiveWindow {
+        let window = self.initWindow(label: label, name: name)
+        window.setStickToWindow(win: stickWin)
+        
+        return window
+    }
+    
+    func initWindow(label: NSTextField, name: String) -> EvasiveWindow {
 
-        let window = EvasiveWindow(label: label)
+        let window = EvasiveWindow(label: label, name: name)
         
         return window
     }
@@ -87,37 +94,10 @@ class Clock: NSObject, NSApplicationDelegate {
             dummytext : "XXX XX"
         )
         
-//        let width = clockRect.width
-//        let height = label.fittingSize.height * hMarginRatio
-//
-//        var x : CGFloat
-//        var y : CGFloat
-//
-//        switch orientation {
-//
-//            case 1: // topleft
-//                x = clockRect.minX
-//                y = clockRect.minY - height
-//
-//            case 2: // topright
-//                x = clockRect.minX
-//                y = clockRect.minY - height
-//
-//            case 3: // bottomright
-//                x = clockRect.minX
-//                y = clockRect.minY + clockRect.height
-//
-//            case 4: // bottomleft
-//                x = clockRect.minX
-//                y = clockRect.minY + clockRect.height
-//
-//            default:
-//                exit(1)
-//
-//        }
-        
         self.dater = self.initWindow(
-            label    : label
+            label    : label,
+            stickWin : self.timer!,
+            name     : "dater"
         )
     }
 
@@ -131,38 +111,10 @@ class Clock: NSObject, NSApplicationDelegate {
             dummytext: "99:99"
 
         )
-//
-//        let width = label.fittingSize.width * wMarginRatio
-//        let height = label.fittingSize.height * hMarginRatio
-//
-//        var x : CGFloat
-//        var y : CGFloat
-//
-//        switch orientation {
-//        case 1: // topleft
-//            x = xpadding
-//            y = screenH - height - ypadding
-//        case 2: // topright
-//            x = screenW - width - xpadding
-//            y = screenH - height - ypadding
-//        case 3: // bottomright
-//            x = screenW - width - xpadding
-//            y = ypadding
-//        case 4: // bottomleft
-//            x = xpadding
-//            y = ypadding
-//        default:
-//            exit(1)
-//        }
-//
-//        clockRect = CGRect(x: x, y: y, width: width, height: height)
         
         self.timer = self.initWindow(
-//            rect     : NSMakeRect(x,
-//                                  y,
-//                                  width,
-//                                  height),
-            label    : label
+            label    : label,
+            name     : "timer"
         )
     }
 }

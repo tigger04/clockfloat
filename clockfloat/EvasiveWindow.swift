@@ -23,7 +23,7 @@
 import Cocoa
 
 class EvasiveWindow: NSWindow {
-
+    
     var screenW : CGFloat = NSScreen.main!.frame.width
     var screenH : CGFloat = NSScreen.main!.frame.height
     
@@ -38,18 +38,21 @@ class EvasiveWindow: NSWindow {
     var wMarginRatio : CGFloat = 3.7
     var hMarginRatio : CGFloat = 3.7
     
-    var orientation : Int = 3
+    var stickToWindow : EvasiveWindow? = nil
+    var orientation : Int = 0
     
-    var theLabel : NSTextField = NSTextField()
+    var name : String = "untitled"
     
-//    override public init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool)
-    public init(label: NSTextField) {
+    //    override public init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool)
+    public init(label: NSTextField, name: String) {
         
-//        super.init( contentRect: NSMakeRect(300,300,300,300),
-//                    styleMask:   .borderless,
-//                    backing:     .buffered,
-//                    defer:       true)
-//
+        self.name = name
+        
+        //        super.init( contentRect: NSMakeRect(300,300,300,300),
+        //                    styleMask:   .borderless,
+        //                    backing:     .buffered,
+        //                    defer:       true)
+        //
         let winWidth = label.fittingSize.width * wMarginRatio
         let winHeight = label.fittingSize.height * hMarginRatio
         
@@ -57,11 +60,15 @@ class EvasiveWindow: NSWindow {
                              width: winWidth,
                              height: winHeight)
         
+        
         super.init( contentRect: winRect,
                     styleMask:   .borderless,
                     backing:     .buffered,
                     defer:       true)
-        
+         
+        print("\(self.name).init winWidth=\(winWidth), winHeight=\(winHeight)")
+        print("\(self.name).init frame.width=\(self.frame.width), frame.height=\(self.frame.height)")
+       
         // hack to get the damned thing vertically centered
         // thanks for nothing Cocoa
         let stringHeight: CGFloat = label.fittingSize.height
@@ -69,68 +76,115 @@ class EvasiveWindow: NSWindow {
         cell.frame = NSRect(x: 0, y: 0, width: winWidth, height: label.fittingSize.height)
         label.frame = cell.frame
         label.alignment = .center
-
+        
         let frame = label.frame
         var titleRect:  NSRect = label.cell!.titleRect(forBounds: frame)
-
-//        titleRect.size.height = label.fittingSize.height
-//        titleRect.size.width = label.fittingSize.width
+        
+        //        titleRect.size.height = label.fittingSize.height
+        //        titleRect.size.width = label.fittingSize.width
         titleRect.origin.y = frame.origin.y + ( winHeight - stringHeight ) / 2
         label.frame = titleRect
         cell.addSubview(label)
         
-        
-        self.theLabel = label
-        
         self.contentView = cell
         self.ignoresMouseEvents = false
+        self.isMovableByWindowBackground = true
         self.level = .floating
         self.collectionBehavior = .canJoinAllSpaces
         self.backgroundColor = NSColor(red: 0, green: 0, blue: 0, alpha: 0.25)
         self.orderFrontRegardless()
-        self.move()
+        self.refreshOrigin()
     }
     
     func move() {
-        let screenW = self.screen?.frame.width ?? 0
-        let screenH = self.screen?.frame.height ?? 0
-//        let screenW = NSScreen.main!.frame.width
-//        let screenH = NSScreen.main!.frame.height
-        let width = self.frame.width
-        let height = self.frame.height
-        
-        var x : CGFloat
-        var y : CGFloat
-        
-        self.orientation = (orientation+1) % 4
-        
-        switch orientation {
-        case 0: // topleft
-            x = xpadding
-            y = screenH - height - ypadding
-        case 1: // topright
-            x = screenW - width - xpadding
-            y = screenH - height - ypadding
-        case 2: // bottomright
-            x = screenW - width - xpadding
-            y = ypadding
-        case 3: // bottomleft
-            x = xpadding
-            y = ypadding
-        default:
-            exit(1)
-        }
-        
-        self.setFrameOrigin(NSPoint(x:x, y:y))
-//        self.setContentSize(NSSize(width: width, height: height))
+        print("\(self.name) move")
+        self.orientation = Int( self.orientation + 1 ) % 4
+        self.refreshOrigin()
     }
     
-    //    refresh() {
-    //
-    //    }
-    //
+    func refreshOrigin() {
+        print("\(self.name) refresh origin. I have an orientation of \(self.orientation)")
+        
+        if let stickWin = self.stickToWindow {
+            print("\(self.name) must stick to \(stickWin.name)")
+            
+            if self.orientation < 2 {
+                let x = stickWin.frame.origin.x
+                let y = stickWin.frame.origin.y - stickWin.frame.height
+                self.setFrameOrigin(NSPoint(x:x, y:y))
+            }
+            else
+            {
+                let x = stickWin.frame.origin.x
+                let y = stickWin.frame.origin.y + stickWin.frame.height
+                self.setFrameOrigin(NSPoint(x:x, y:y))
+            }
+        }
+        else {
+            
+            print("\(self.name) is free and easy")
+            
+            let screenW = self.screen?.frame.width ?? 0
+            let screenH = self.screen?.frame.height ?? 0
+            //        let screenW = NSScreen.main!.frame.width
+            //        let screenH = NSScreen.main!.frame.height
+            let width = self.frame.width
+            let height = self.frame.height
+            
+            var x : CGFloat
+            var y : CGFloat
+            
+            switch self.orientation {
+            case 0: // topleft
+                x = xpadding
+                y = screenH - height - ypadding
+            case 1: // topright
+                x = screenW - width - xpadding
+                y = screenH - height - ypadding
+            case 2: // bottomright
+                x = screenW - width - xpadding
+                y = ypadding
+            case 3: // bottomleft
+                x = xpadding
+                y = ypadding
+            default:
+                exit(1)
+            }
+            
+            self.setFrameOrigin(NSPoint(x:x, y:y))
+        }
+        //        self.setContentSize(NSSize(width: width, height: height))
+    }
+    
+    public func getOrientation() -> Int {
+        return self.orientation
+    }
+    
+    public func setStickToWindow(win: EvasiveWindow) {
+        self.stickToWindow = win
+        self.refreshOrigin()
+    }
+    
     override func mouseEntered(with event: NSEvent) {
-        orientation = Int( orientation + 1 ) % 4
-//        move()
+        super.mouseEntered(with: event)
+        print("mouse entered")
+        self.move()
+    }
+    
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        print("mouse exited")
+    }
+    
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        print("mouse down")
+        //        self.move()
+    }
+    
+    override func rightMouseDown(with event: NSEvent) {
+        super.rightMouseDown(with: event)
+        print("right mouse button down")
+        self.move()
     }
 }

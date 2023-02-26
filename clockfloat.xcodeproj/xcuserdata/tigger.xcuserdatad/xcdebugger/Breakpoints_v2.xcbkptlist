@@ -14,9 +14,9 @@
             filePath = "clockfloat/EvasiveWindow.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "82"
-            endingLineNumber = "82"
-            landmarkName = "init(label:)"
+            startingLineNumber = "89"
+            endingLineNumber = "89"
+            landmarkName = "init(label:name:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -30,9 +30,9 @@
             filePath = "clockfloat/EvasiveWindow.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "69"
-            endingLineNumber = "69"
-            landmarkName = "init(label:)"
+            startingLineNumber = "76"
+            endingLineNumber = "76"
+            landmarkName = "init(label:name:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -46,9 +46,9 @@
             filePath = "clockfloat/EvasiveWindow.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "74"
-            endingLineNumber = "74"
-            landmarkName = "init(label:)"
+            startingLineNumber = "81"
+            endingLineNumber = "81"
+            landmarkName = "init(label:name:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -56,15 +56,31 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "5C088194-D678-4D6C-A06E-C8366C3F7B4B"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "clockfloat/EvasiveWindow.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "76"
-            endingLineNumber = "76"
-            landmarkName = "init(label:)"
+            startingLineNumber = "83"
+            endingLineNumber = "83"
+            landmarkName = "init(label:name:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "5D3EA1AC-6F0F-46F7-91BE-F60D3DA332D3"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "clockfloat/EvasiveWindow.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "114"
+            endingLineNumber = "114"
+            landmarkName = "refreshOrigin()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
