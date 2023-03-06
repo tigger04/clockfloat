@@ -32,15 +32,16 @@ class EvasiveWindow: NSWindow {
    var timeFont: String = "New"
    var timeFontSize: CGFloat = 22
 
-   var xpadding: CGFloat = 10
-   var ypadding: CGFloat = 10
-   var wMarginRatio: CGFloat = 3.7
-   var hMarginRatio: CGFloat = 3.7
+   var xpadding: CGFloat = 5
+   var ypadding: CGFloat = 5
+   var wMarginRatio: CGFloat = 1.3
+   var hMarginRatio: CGFloat = 1.2
 
    var stickToWindow: EvasiveWindow?
    var stuckToWindow: EvasiveWindow? = nil
 
-   var orientation: Int = 0
+   var orientation: Int = 2 // default
+   // 0 = topleft, 1 = topright, 2 = bottomright, 3 = bottomleft
 
    var name: String = "untitled"
 
@@ -67,10 +68,9 @@ class EvasiveWindow: NSWindow {
                  defer: true)
 
       if stickWin != nil {
+         print("\(self.stickToWindow!.name) is stuck to \(self.name)")
          self.stickToWindow!.stuckToWindow = self
       }
-//      print("\(self.name).init winWidth=\(winWidth), winHeight=\(winHeight)")
-//      print("\(self.name).init frame.width=\(self.frame.width), frame.height=\(self.frame.height)")
 
       // hack to get the damned thing vertically centered
       // thanks for nothing Cocoa
@@ -102,25 +102,36 @@ class EvasiveWindow: NSWindow {
 
    public func move() {
       print("\(self.name) move")
-      self.orientation = Int(self.orientation + 1) % 4
-      self.refreshOrigin()
 
-      if self.stuckToWindow != nil {
-         self.stuckToWindow!.move()
+      if self.stickToWindow == nil {
+         self.orientation = Int(self.getOrientation() + 1) % 4
+         self.refreshOrigin()
+
+         if self.stuckToWindow != nil {
+            self.stuckToWindow!.refreshOrigin()
+         }
+      }
+      else {
+         self.stickToWindow!.move()
       }
    }
 
-   //    func getWidth() -> CGFloat {
-   //        return self.frame.width
-   //    }
+   public func getOrientation() -> Int {
+      if self.stickToWindow == nil {
+         return self.orientation
+      }
+      else {
+         return self.stickToWindow!.getOrientation()
+      }
+   }
 
    func refreshOrigin() {
-      print("\(self.name) refresh origin. I have an orientation of \(self.orientation)")
+      print("\(self.name) refresh origin. I have an orientation of \(self.getOrientation())")
 
       if let stickWin = self.stickToWindow {
          print("\(self.name) must stick to \(stickWin.name)")
 
-         if self.orientation < 2 {
+         if self.getOrientation() < 2 {
             let x = stickWin.frame.origin.x
             let y = stickWin.frame.origin.y - self.frame.height
             self.setFrameOrigin(NSPoint(x: x, y: y))
@@ -144,7 +155,7 @@ class EvasiveWindow: NSWindow {
          var x: CGFloat
          var y: CGFloat
 
-         switch self.orientation {
+         switch self.getOrientation() {
          case 0: // topleft
             x = self.xpadding
             y = screenH - height - self.ypadding
@@ -164,10 +175,6 @@ class EvasiveWindow: NSWindow {
          self.setFrameOrigin(NSPoint(x: x, y: y))
       }
       //        self.setContentSize(NSSize(width: width, height: height))
-   }
-
-   public func getOrientation() -> Int {
-      return self.orientation
    }
 
    //    public func setStickToWindow(win: EvasiveWindow) {
