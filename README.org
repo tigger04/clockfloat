@@ -1,2 +1,11 @@
-# clockfloat
-clockfloat is a simple, simple date and time window that sits on top of all other applications displaying the current date and time.
+#+title: Clockfloat
+
+* WTF is clockfloat
+Clockfloat is a simple, simple date and time window that simply sits on top of all other applications displaying the current date and time.
+* Why would I want this?
+Personally, I hate the menu bar. I hate the dock.
+** Modern OS Design
+Out of the box, MacOS has a menu bar and dock, always visible by default, eating up valuable space on your screen. It made sense on the boxy square screens of the 90s, it is justifiable on a tablet like the iPad that operates mostly in portrait layout. But on a modern desktop or laptop display where the vertical axis has been squeezed in favour of a widescreen 16:9 or 16:10 layout, not one but two bars across the screen is unforgivable. Get rid of them!
+** The problem
+Most people hide the dock. But losing the menubar and the clock along with it held me back for years. And I expect I'm not the only one.
+
