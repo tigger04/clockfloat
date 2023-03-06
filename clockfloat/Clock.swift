@@ -1,6 +1,6 @@
 // The MIT License
 
-// Copyright (c) 2018 Daniel
+// Copyright (c) 2023 Tadhg O'Brien
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,21 +25,12 @@ import Cocoa
 class Clock: NSObject, NSApplicationDelegate {
    var dater: EvasiveWindow?
    var timer: EvasiveWindow?
-//    var screenW : CGFloat = NSScreen.main!.frame.width
-//    var screenH : CGFloat = NSScreen.main!.frame.height
 
    var dateFont: String = "New"
    var dateFontSize: CGFloat = 14
 
    var timeFont: String = "New"
    var timeFontSize: CGFloat = 22
-
-//    var xpadding : CGFloat = 10
-//    var ypadding : CGFloat = 10
-//    var wMarginRatio : CGFloat = 1.1
-//    var hMarginRatio : CGFloat = 1.3
-
-//    var clockRect : CGRect = CGRect(x:0, y:0, width: 0, height: 0)
 
    func applicationDidFinishLaunching(_ aNotification: Notification) {
       self.initTimer()
