@@ -98,6 +98,16 @@ class EvasiveWindow: NSWindow {
 
       self.orderFrontRegardless()
       self.refreshOrigin()
+      self.watchForScreenChanges()
+   }
+
+   func watchForScreenChanges() {
+      NotificationCenter.default.addObserver(
+         forName: NSNotification.Name(rawValue: "NSApplicationDidChangeScreenParametersNotification"),
+         object: NSApplication.shared,
+         queue: .main) { notification in
+            self.refreshOrigin()
+         }
    }
 
    public func move() {
