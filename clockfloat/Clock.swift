@@ -74,7 +74,7 @@ class Clock: NSObject, NSApplicationDelegate {
    func initWindow(label: NSTextField, name: String, stickWin: EvasiveWindow? = nil) -> EvasiveWindow {
       let window = EvasiveWindow(label: label, name: name, stickWin: stickWin)
 
-      return windowa
+      return window
    }
 
    func initDater() {

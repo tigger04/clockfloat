@@ -64,8 +64,8 @@ class EvasiveWindow: NSWindow {
                  backing: .buffered,
                  defer: true)
 
-      print("\(self.name).init winWidth=\(winWidth), winHeight=\(winHeight)")
-      print("\(self.name).init frame.width=\(self.frame.width), frame.height=\(self.frame.height)")
+//      print("\(self.name).init winWidth=\(winWidth), winHeight=\(winHeight)")
+//      print("\(self.name).init frame.width=\(self.frame.width), frame.height=\(self.frame.height)")
 
       // hack to get the damned thing vertically centered
       // thanks for nothing Cocoa
@@ -90,14 +90,19 @@ class EvasiveWindow: NSWindow {
       self.level = .floating
       self.collectionBehavior = .canJoinAllSpaces
       self.backgroundColor = NSColor(red: 0, green: 0, blue: 0, alpha: 0.75)
+
       self.orderFrontRegardless()
       self.refreshOrigin()
    }
 
-   func move() {
+   public func move() {
       print("\(self.name) move")
       self.orientation = Int(self.orientation + 1) % 4
       self.refreshOrigin()
+
+      if self.stickToWindow != nil {
+         self.stickToWindow!.move()
+      }
    }
 
    //    func getWidth() -> CGFloat {
@@ -117,7 +122,7 @@ class EvasiveWindow: NSWindow {
          }
          else {
             let x = stickWin.frame.origin.x
-            let y = stickWin.frame.origin.y + self.frame.height
+            let y = stickWin.frame.origin.y + stickWin.frame.height
             self.setFrameOrigin(NSPoint(x: x, y: y))
          }
       }
