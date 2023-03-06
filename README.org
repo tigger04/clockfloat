@@ -1,0 +1,2 @@
+# clockfloat
+clockfloat is a simple, simple date and time window that sits on top of all other applications displaying the current date and time.
