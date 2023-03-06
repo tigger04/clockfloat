@@ -38,6 +38,8 @@ class EvasiveWindow: NSWindow {
    var hMarginRatio: CGFloat = 3.7
 
    var stickToWindow: EvasiveWindow?
+   var stuckToWindow: EvasiveWindow? = nil
+
    var orientation: Int = 0
 
    var name: String = "untitled"
@@ -64,6 +66,9 @@ class EvasiveWindow: NSWindow {
                  backing: .buffered,
                  defer: true)
 
+      if stickWin != nil {
+         self.stickToWindow!.stuckToWindow = self
+      }
 //      print("\(self.name).init winWidth=\(winWidth), winHeight=\(winHeight)")
 //      print("\(self.name).init frame.width=\(self.frame.width), frame.height=\(self.frame.height)")
 
@@ -100,8 +105,8 @@ class EvasiveWindow: NSWindow {
       self.orientation = Int(self.orientation + 1) % 4
       self.refreshOrigin()
 
-      if self.stickToWindow != nil {
-         self.stickToWindow!.move()
+      if self.stuckToWindow != nil {
+         self.stuckToWindow!.move()
       }
    }
 

@@ -94,7 +94,6 @@ class Clock: NSObject, NSApplicationDelegate {
 
    func initTimer() {
       let label = self.initLabel(
-         //            font     : NSFont.monospacedDigitSystemFont(ofSize: 36, weight: .regular),
          font: NSFont(name: self.timeFont, size: self.timeFontSize)!,
          format: "HH:mm",
          interval: 1,
