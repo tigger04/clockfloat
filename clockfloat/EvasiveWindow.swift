@@ -23,19 +23,11 @@
 import Cocoa
 
 class EvasiveWindow: NSWindow {
-   var screenW: CGFloat = NSScreen.main!.frame.width
-   var screenH: CGFloat = NSScreen.main!.frame.height
-
-   var dateFont: String = "New"
-   var dateFontSize: CGFloat = 14
-
-   var timeFont: String = "New"
-   var timeFontSize: CGFloat = 22
 
    var xpadding: CGFloat = 5
    var ypadding: CGFloat = 5
    var wMarginRatio: CGFloat = 1.3
-   var hMarginRatio: CGFloat = 1.2
+   var hMarginRatio: CGFloat = 1.3
 
    var stickToWindow: EvasiveWindow?
    var stuckToWindow: EvasiveWindow? = nil
@@ -45,7 +37,7 @@ class EvasiveWindow: NSWindow {
 
    var name: String = "untitled"
 
-   public init(label: NSTextField, name: String,
+   public init(label: NSTextField, name: String, screen: NSScreen,
                stickWin: EvasiveWindow? = nil)
    {
       self.name = name
@@ -157,8 +149,9 @@ class EvasiveWindow: NSWindow {
 
          let screenW = self.screen?.frame.width ?? 0
          let screenH = self.screen?.frame.height ?? 0
-         //        let screenW = NSScreen.main!.frame.width
-         //        let screenH = NSScreen.main!.frame.height
+         let screenX = self.screen?.frame.origin.x ?? 0
+         let screenY = self.screen?.frame.origin.y ?? 0
+
          let width = self.frame.width
          let height = self.frame.height
 
@@ -167,17 +160,17 @@ class EvasiveWindow: NSWindow {
 
          switch self.getOrientation() {
          case 0: // topleft
-            x = self.xpadding
-            y = screenH - height - self.ypadding
+            x = self.xpadding + screenX
+            y = screenH - height - self.ypadding + screenY
          case 1: // topright
-            x = screenW - width - self.xpadding
-            y = screenH - height - self.ypadding
+            x = screenW - width - self.xpadding + screenX
+            y = screenH - height - self.ypadding + screenY
          case 2: // bottomright
-            x = screenW - width - self.xpadding
-            y = self.ypadding
+            x = screenW - width - self.xpadding + screenX
+            y = self.ypadding + screenY
          case 3: // bottomleft
-            x = self.xpadding
-            y = self.ypadding
+            x = self.xpadding + screenX
+            y = self.ypadding + screenY
          default:
             exit(1)
          }

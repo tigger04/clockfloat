@@ -26,23 +26,46 @@ class Clock: NSObject, NSApplicationDelegate {
    var dater: EvasiveWindow?
    var timer: EvasiveWindow?
 
-   var dateFont: String = "New"
-   var dateFontSize: CGFloat = 14
+   var dateFont: String = "White Rabbit"
+   var dateFontSize: Double = 0.012
 
-   var timeFont: String = "New"
-   var timeFontSize: CGFloat = 22
+   var timeFont: String = "White Rabbit"
+   var timeFontSize: Double = 0.014
 
    func applicationDidFinishLaunching(_ aNotification: Notification) {
-      self.initTimer()
-      self.initDater()
+      for screen in NSScreen.screens {
+         self.initTimer(screen: screen)
+         self.initDater(screen: screen)
+      }
    }
 
-   func initLabel(font: NSFont, format: String, interval: TimeInterval, dummytext: String) -> NSTextField {
+   func initLabel(font: String, fontHeight: Double, screen: NSScreen, format: String, interval: TimeInterval, dummytext: String) -> NSTextField {
+
       let formatter = DateFormatter()
       formatter.dateFormat = format
 
+//      let tmpLabel = NSTextField()
+//      tmpLabel.font = NSFont(name: font, size: 20)
+//      tmpLabel.isBezeled = false
+//      tmpLabel.isEditable = false
+//      tmpLabel.drawsBackground = false
+//      tmpLabel.alignment = .center
+//      tmpLabel.stringValue = dummytext
+
+      let pixelsPerPoint = NSFont(name: font, size: 20)!.boundingRectForFont.height / 20.0
+//      let tmpLabelHeight = tmpLabel.frame.height
+//      let pixelsPerPoint = Double(tmpLabelHeight) / 20.0
+
       let label = NSTextField()
-      label.font = font
+
+      if fontHeight < 1.0 {
+         let resolvedFontSize = screen.frame.height * fontHeight / pixelsPerPoint
+         label.font = NSFont(name: font, size: resolvedFontSize)
+      }
+      else {
+         label.font = NSFont(name: font, size: fontHeight)
+      }
+
       label.isBezeled = false
       label.isEditable = false
       label.drawsBackground = false
@@ -62,15 +85,21 @@ class Clock: NSObject, NSApplicationDelegate {
       return label
    }
 
-   func initWindow(label: NSTextField, name: String, stickWin: EvasiveWindow? = nil) -> EvasiveWindow {
-      let window = EvasiveWindow(label: label, name: name, stickWin: stickWin)
+   func initWindow(label: NSTextField, name: String, screen: NSScreen, stickWin: EvasiveWindow? = nil) -> EvasiveWindow {
+      let window = EvasiveWindow(label: label, name: name, screen: screen, stickWin: stickWin)
 
       return window
    }
 
-   func initDater() {
+   func initDater(screen: NSScreen) {
+      if self.dateFontSize < 1.0 {
+         self.dateFontSize = self.dateFontSize * screen.frame.height
+      }
+
       let label = self.initLabel(
-         font: NSFont(name: self.dateFont, size: self.dateFontSize)!,
+         font: self.dateFont,
+         fontHeight: self.dateFontSize,
+         screen: screen,
          format: "E d",
          interval: 10,
          dummytext: "XXX XX"
@@ -79,13 +108,16 @@ class Clock: NSObject, NSApplicationDelegate {
       self.dater = self.initWindow(
          label: label,
          name: "dater",
+         screen: screen,
          stickWin: self.timer!
       )
    }
 
-   func initTimer() {
+   func initTimer(screen: NSScreen) {
       let label = self.initLabel(
-         font: NSFont(name: self.timeFont, size: self.timeFontSize)!,
+         font: self.timeFont,
+         fontHeight: self.timeFontSize,
+         screen: screen,
          format: "HH:mm",
          interval: 1,
          dummytext: "99:99"
@@ -93,7 +125,8 @@ class Clock: NSObject, NSApplicationDelegate {
 
       self.timer = self.initWindow(
          label: label,
-         name: "timer"
+         name: "timer",
+         screen: screen
       )
    }
 }
