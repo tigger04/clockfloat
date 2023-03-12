@@ -23,23 +23,44 @@
 import Cocoa
 
 class Clock: NSObject, NSApplicationDelegate {
-   var dater: EvasiveWindow?
-   var timer: EvasiveWindow?
+   var dateWindow: EvasiveWindow?
+   var timeWindow: EvasiveWindow?
 
    var dateFont: String = "White Rabbit"
-   var dateFontSize: Double = 0.012
+   var dateFontSize: Double = 0.01
 
    var timeFont: String = "White Rabbit"
    var timeFontSize: Double = 0.014
 
    func applicationDidFinishLaunching(_ aNotification: Notification) {
+      self.initializeAllScreens()
+      self.watchForScreenChanges()
+   }
+
+   func initializeAllScreens() {
+
       for screen in NSScreen.screens {
          self.initTimer(screen: screen)
          self.initDater(screen: screen)
       }
    }
 
-   func initLabel(font: String, fontHeight: Double, screen: NSScreen, format: String, interval: TimeInterval, dummytext: String) -> NSTextField {
+   func watchForScreenChanges() {
+      NotificationCenter.default.addObserver(
+         forName: NSNotification.Name(rawValue: "NSApplicationDidChangeScreenParametersNotification"),
+         object: NSApplication.shared,
+         queue: .main) { notification in
+            if let dateWindow = self.dateWindow {
+               dateWindow.close()
+            }
+            if let timeWindow = self.timeWindow {
+               timeWindow.close()
+            }
+            self.initializeAllScreens()
+         }
+   }
+
+   func initLabel(font: String, fontHeight: Double, screen: NSScreen, format: String, interval: TimeInterval, dummytext: String) -> TickingTextField {
 
       let formatter = DateFormatter()
       formatter.dateFormat = format
@@ -56,7 +77,7 @@ class Clock: NSObject, NSApplicationDelegate {
 //      let tmpLabelHeight = tmpLabel.frame.height
 //      let pixelsPerPoint = Double(tmpLabelHeight) / 20.0
 
-      let label = NSTextField()
+      let label = TickingTextField()
 
       if fontHeight < 1.0 {
          let resolvedFontSize = screen.frame.height * fontHeight / pixelsPerPoint
@@ -72,29 +93,28 @@ class Clock: NSObject, NSApplicationDelegate {
       label.alignment = .center
       label.stringValue = dummytext
 
-//        label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: 1-(1/3)*(1/3))
       label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: 0.5)
 //        label.sizeToFit()
 
-      let timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
+      label.timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
          label.stringValue = formatter.string(from: Date())
       }
-      timer.tolerance = interval / 10
-      timer.fire()
+      label.timer!.tolerance = interval / 10
+      label.timer!.fire()
 
       return label
    }
 
-   func initWindow(label: NSTextField, name: String, screen: NSScreen, stickWin: EvasiveWindow? = nil) -> EvasiveWindow {
+   func initWindow(label: TickingTextField, name: String, screen: NSScreen, stickWin: EvasiveWindow? = nil) -> EvasiveWindow {
       let window = EvasiveWindow(label: label, name: name, screen: screen, stickWin: stickWin)
 
       return window
    }
 
    func initDater(screen: NSScreen) {
-      if self.dateFontSize < 1.0 {
-         self.dateFontSize = self.dateFontSize * screen.frame.height
-      }
+//      if self.dateFontSize < 1.0 {
+//         self.dateFontSize = self.dateFontSize * screen.frame.height
+//      }
 
       let label = self.initLabel(
          font: self.dateFont,
@@ -105,11 +125,11 @@ class Clock: NSObject, NSApplicationDelegate {
          dummytext: "XXX XX"
       )
 
-      self.dater = self.initWindow(
+      self.dateWindow = self.initWindow(
          label: label,
          name: "dater",
          screen: screen,
-         stickWin: self.timer!
+         stickWin: self.timeWindow!
       )
    }
 
@@ -123,7 +143,7 @@ class Clock: NSObject, NSApplicationDelegate {
          dummytext: "99:99"
       )
 
-      self.timer = self.initWindow(
+      self.timeWindow = self.initWindow(
          label: label,
          name: "timer",
          screen: screen

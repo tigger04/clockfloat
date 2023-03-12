@@ -37,7 +37,9 @@ class EvasiveWindow: NSWindow {
 
    var name: String = "untitled"
 
-   public init(label: NSTextField, name: String, screen: NSScreen,
+   var tickingLabel : TickingTextField?
+
+   public init(label: TickingTextField, name: String, screen: NSScreen,
                stickWin: EvasiveWindow? = nil)
    {
       self.name = name
@@ -80,6 +82,7 @@ class EvasiveWindow: NSWindow {
       titleRect.origin.y = frame.origin.y + (winHeight - stringHeight) / 2
       label.frame = titleRect
       cell.addSubview(label)
+      self.tickingLabel = label
 
       self.contentView = cell
       self.ignoresMouseEvents = false
@@ -90,16 +93,6 @@ class EvasiveWindow: NSWindow {
 
       self.orderFrontRegardless()
       self.refreshOrigin()
-      self.watchForScreenChanges()
-   }
-
-   func watchForScreenChanges() {
-      NotificationCenter.default.addObserver(
-         forName: NSNotification.Name(rawValue: "NSApplicationDidChangeScreenParametersNotification"),
-         object: NSApplication.shared,
-         queue: .main) { notification in
-            self.refreshOrigin()
-         }
    }
 
    public func move() {
@@ -207,5 +200,12 @@ class EvasiveWindow: NSWindow {
       super.rightMouseDown(with: event)
       print("right mouse button down")
       self.move()
+   }
+
+   deinit {
+      print("EvasiveWindow.deinit (\(self.name))")
+      if let tickingLabel = self.tickingLabel {
+         tickingLabel.killTimer()
+      }
    }
 }
