@@ -32,6 +32,8 @@ class Clock: NSObject, NSApplicationDelegate {
    var timeFont: String = "White Rabbit"
    var timeFontSize: Double = 0.014
 
+   var late : Double = 150
+
    func applicationDidFinishLaunching(_ aNotification: Notification) {
       self.initializeAllScreens()
       self.watchForScreenChanges()
@@ -97,7 +99,7 @@ class Clock: NSObject, NSApplicationDelegate {
 //        label.sizeToFit()
 
       label.timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
-         label.stringValue = formatter.string(from: Date())
+         label.stringValue = formatter.string(from: Date().addingTimeInterval(self.late))
       }
       label.timer!.tolerance = interval / 10
       label.timer!.fire()
