@@ -30,7 +30,7 @@ class EvasiveWindow: NSWindow {
    var hMarginRatio: CGFloat = 1.3
 
    var stickToWindow: EvasiveWindow?
-   var stuckToWindow: EvasiveWindow? = nil
+   var stuckToMeWindow: EvasiveWindow? = nil
 
    var orientation: Int = 2 // default
    // 0 = topleft, 1 = topright, 2 = bottomright, 3 = bottomleft
@@ -39,10 +39,13 @@ class EvasiveWindow: NSWindow {
 
    var tickingLabel : TickingTextField?
 
+   var targetScreen : NSScreen?
+
    public init(label: TickingTextField, name: String, screen: NSScreen,
                stickWin: EvasiveWindow? = nil)
    {
       self.name = name
+      self.targetScreen = screen
 
       let winHeight = label.fittingSize.height * self.hMarginRatio
       var winWidth = label.fittingSize.width * self.wMarginRatio
@@ -63,7 +66,7 @@ class EvasiveWindow: NSWindow {
 
       if stickWin != nil {
          print("\(self.stickToWindow!.name) is stuck to \(self.name)")
-         self.stickToWindow!.stuckToWindow = self
+         self.stickToWindow!.stuckToMeWindow = self
       }
 
       // hack to get the damned thing vertically centered
@@ -102,8 +105,8 @@ class EvasiveWindow: NSWindow {
          self.orientation = Int(self.getOrientation() + 1) % 4
          self.refreshOrigin()
 
-         if self.stuckToWindow != nil {
-            self.stuckToWindow!.refreshOrigin()
+         if self.stuckToMeWindow != nil {
+            self.stuckToMeWindow!.refreshOrigin()
          }
       }
       else {
@@ -140,10 +143,10 @@ class EvasiveWindow: NSWindow {
       else {
          print("\(self.name) is free and easy")
 
-         let screenW = self.screen?.frame.width ?? 0
-         let screenH = self.screen?.frame.height ?? 0
-         let screenX = self.screen?.frame.origin.x ?? 0
-         let screenY = self.screen?.frame.origin.y ?? 0
+         let screenW = self.targetScreen?.frame.width ?? 0
+         let screenH = self.targetScreen?.frame.height ?? 0
+         let screenX = self.targetScreen?.frame.origin.x ?? 0
+         let screenY = self.targetScreen?.frame.origin.y ?? 0
 
          let width = self.frame.width
          let height = self.frame.height
