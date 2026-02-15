@@ -13,8 +13,8 @@ class TickingTextField: NSTextField {
 
    func killTimer() {
       if let timer = self.timer {
-         print("invalidaing timer")
          timer.invalidate()
+         self.timer = nil
       }
    }
 }

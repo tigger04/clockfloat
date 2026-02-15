@@ -41,11 +41,18 @@ class EvasiveWindow: NSWindow {
 
    var targetScreen : NSScreen?
 
-   public init(label: TickingTextField, name: String, screen: NSScreen,
-               stickWin: EvasiveWindow? = nil)
+   private let dodgesMouse: Bool
+
+   public init(label: TickingTextField,
+               name: String,
+               screen: NSScreen,
+               stickWin: EvasiveWindow? = nil,
+               dodgesMouse: Bool = true,
+               initialOrientation: Int? = nil)
    {
       self.name = name
       self.targetScreen = screen
+      self.dodgesMouse = dodgesMouse
 
       let winHeight = label.fittingSize.height * self.hMarginRatio
       var winWidth = label.fittingSize.width * self.wMarginRatio
@@ -53,6 +60,10 @@ class EvasiveWindow: NSWindow {
       if stickWin != nil {
          self.stickToWindow = stickWin
          winWidth = self.stickToWindow!.frame.width
+      }
+
+      if let initialOrientation = initialOrientation {
+         self.orientation = initialOrientation % 4
       }
 
       let winRect = NSRect(x: 0, y: 0,
@@ -72,7 +83,9 @@ class EvasiveWindow: NSWindow {
       // hack to get the damned thing vertically centered
       // thanks for nothing Cocoa
       let stringHeight: CGFloat = label.fittingSize.height
-      let cell = NSTableCellView()
+      let cell = HoverTrackingCellView()
+      cell.windowOwner = self
+      cell.hoverEnabled = dodgesMouse
       cell.frame = NSRect(x: 0, y: 0, width: winWidth, height: label.fittingSize.height)
       label.frame = cell.frame
       label.alignment = .center
@@ -88,10 +101,11 @@ class EvasiveWindow: NSWindow {
       self.tickingLabel = label
 
       self.contentView = cell
+      cell.updateTrackingAreas()
       self.ignoresMouseEvents = false
       self.isMovableByWindowBackground = true
       self.level = .floating
-      self.collectionBehavior = .canJoinAllSpaces
+      self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
       self.backgroundColor = NSColor(red: 0, green: 0, blue: 0, alpha: 0.75)
 
       self.orderFrontRegardless()
@@ -99,6 +113,7 @@ class EvasiveWindow: NSWindow {
    }
 
    public func move() {
+      guard self.dodgesMouse else { return }
       print("\(self.name) move")
 
       if self.stickToWindow == nil {
@@ -143,10 +158,11 @@ class EvasiveWindow: NSWindow {
       else {
          print("\(self.name) is free and easy")
 
-         let screenW = self.targetScreen?.frame.width ?? 0
-         let screenH = self.targetScreen?.frame.height ?? 0
-         let screenX = self.targetScreen?.frame.origin.x ?? 0
-         let screenY = self.targetScreen?.frame.origin.y ?? 0
+         let screenFrame = self.targetScreen?.visibleFrame ?? self.targetScreen?.frame ?? .zero
+         let screenW = screenFrame.width
+         let screenH = screenFrame.height
+         let screenX = screenFrame.origin.x
+         let screenY = screenFrame.origin.y
 
          let width = self.frame.width
          let height = self.frame.height
@@ -182,21 +198,9 @@ class EvasiveWindow: NSWindow {
    //        self.refreshOrigin()
    //    }
 
-   override func mouseEntered(with event: NSEvent) {
-      super.mouseEntered(with: event)
-      print("mouse entered")
-      self.move()
-   }
-
-   override func mouseExited(with event: NSEvent) {
-      super.mouseExited(with: event)
-      print("mouse exited")
-   }
-
-   override func mouseDown(with event: NSEvent) {
-      super.mouseDown(with: event)
-      print("mouse down")
-      //        self.move()
+   override func close() {
+      self.tickingLabel?.killTimer()
+      super.close()
    }
 
    override func rightMouseDown(with event: NSEvent) {
@@ -210,5 +214,39 @@ class EvasiveWindow: NSWindow {
       if let tickingLabel = self.tickingLabel {
          tickingLabel.killTimer()
       }
+   }
+}
+
+private final class HoverTrackingCellView: NSTableCellView {
+   weak var windowOwner: EvasiveWindow?
+   private var trackingArea: NSTrackingArea?
+   var hoverEnabled: Bool = true {
+      didSet {
+         if hoverEnabled != oldValue {
+            self.updateTrackingAreas()
+         }
+      }
+   }
+
+   override func updateTrackingAreas() {
+      super.updateTrackingAreas()
+
+      if let trackingArea = self.trackingArea {
+         self.removeTrackingArea(trackingArea)
+         self.trackingArea = nil
+      }
+
+      guard self.hoverEnabled else { return }
+
+      let options: NSTrackingArea.Options = [.activeAlways, .mouseEnteredAndExited, .inVisibleRect]
+      let area = NSTrackingArea(rect: self.bounds, options: options, owner: self, userInfo: nil)
+      self.addTrackingArea(area)
+      self.trackingArea = area
+   }
+
+   override func mouseEntered(with event: NSEvent) {
+      super.mouseEntered(with: event)
+      guard self.hoverEnabled else { return }
+      self.windowOwner?.move()
    }
 }

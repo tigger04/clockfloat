@@ -21,51 +21,158 @@
 // THE SOFTWARE.
 
 import Cocoa
+import CoreGraphics
+import CoreText
+
+struct ClockConfiguration {
+   enum Corner: String {
+      case topLeft
+      case topRight
+      case bottomRight
+      case bottomLeft
+
+      var orientationValue: Int {
+         switch self {
+         case .topLeft: return 0
+         case .topRight: return 1
+         case .bottomRight: return 2
+         case .bottomLeft: return 3
+         }
+      }
+   }
+
+   var fontName: String
+   var dateFontSize: Double
+   var timeFontSize: Double
+   var initialCorner: Corner
+   var dodgesMouse: Bool
+
+   private struct Keys {
+      static let fontName = "ClockFontName"
+      static let dateFontSize = "ClockDateFontSize"
+      static let timeFontSize = "ClockTimeFontSize"
+      static let initialCorner = "ClockInitialCorner"
+      static let dodgesMouse = "ClockDodgesMouse"
+   }
+
+   static func load(userDefaults: UserDefaults = .standard) -> ClockConfiguration {
+      userDefaults.register(defaults: [
+         Keys.fontName: "White Rabbit",
+         Keys.dateFontSize: 0.01,
+         Keys.timeFontSize: 0.014,
+         Keys.initialCorner: Corner.bottomRight.rawValue,
+         Keys.dodgesMouse: true,
+      ])
+
+      let font = userDefaults.string(forKey: Keys.fontName) ?? "White Rabbit"
+      let dateSize = userDefaults.object(forKey: Keys.dateFontSize) as? Double ?? 0.01
+      let timeSize = userDefaults.object(forKey: Keys.timeFontSize) as? Double ?? 0.014
+      let cornerRaw = userDefaults.string(forKey: Keys.initialCorner) ?? Corner.bottomRight.rawValue
+      let corner = Corner(rawValue: cornerRaw) ?? .bottomRight
+      let dodges = userDefaults.object(forKey: Keys.dodgesMouse) as? Bool ?? true
+
+      return ClockConfiguration(fontName: font,
+                                dateFontSize: dateSize,
+                                timeFontSize: timeSize,
+                                initialCorner: corner,
+                                dodgesMouse: dodges)
+   }
+}
 
 class Clock: NSObject, NSApplicationDelegate {
-   var dateWindow: EvasiveWindow?
-   var timeWindow: EvasiveWindow?
+   private struct WindowPair {
+      let timeWindow: EvasiveWindow
+      let dateWindow: EvasiveWindow
+   }
 
-   var dateFont: String = "White Rabbit"
-   var dateFontSize: Double = 0.01
+   private var windowsByDisplayID: [CGDirectDisplayID: WindowPair] = [:]
+   private var screenChangeObserver: NSObjectProtocol?
 
-   var timeFont: String = "White Rabbit"
-   var timeFontSize: Double = 0.014
+   var dateFont: String
+   var dateFontSize: Double
+
+   var timeFont: String
+   var timeFontSize: Double
 
    var late : Double = 150
 
+   let configuration: ClockConfiguration
+
+   override init() {
+      let configuration = ClockConfiguration.load()
+      self.configuration = configuration
+      self.dateFont = configuration.fontName
+      self.timeFont = configuration.fontName
+      self.dateFontSize = configuration.dateFontSize
+      self.timeFontSize = configuration.timeFontSize
+      super.init()
+   }
+
    func applicationDidFinishLaunching(_ aNotification: Notification) {
+      self.registerEmbeddedFonts()
       self.initializeAllScreens()
       self.watchForScreenChanges()
    }
 
-   func initializeAllScreens() {
+   func applicationWillTerminate(_ notification: Notification) {
+      if let observer = self.screenChangeObserver {
+         NotificationCenter.default.removeObserver(observer)
+      }
+      self.teardownAllScreens()
+   }
 
-      for screen in NSScreen.screens {
-         self.initTimer(screen: screen)
-         self.initDater(screen: screen)
+   deinit {
+      if let observer = self.screenChangeObserver {
+         NotificationCenter.default.removeObserver(observer)
       }
    }
 
+   func initializeAllScreens() {
+      self.teardownAllScreens()
+
+      for screen in NSScreen.screens {
+         guard let displayID = screen.displayID else { continue }
+
+         let timeWindow = self.initTimer(screen: screen)
+         let dateWindow = self.initDater(screen: screen, stickWindow: timeWindow)
+
+         self.windowsByDisplayID[displayID] = WindowPair(timeWindow: timeWindow, dateWindow: dateWindow)
+      }
+   }
+
+   func teardownAllScreens() {
+      for pair in self.windowsByDisplayID.values {
+         pair.dateWindow.close()
+         pair.timeWindow.close()
+      }
+      self.windowsByDisplayID.removeAll()
+   }
+
    func watchForScreenChanges() {
-      NotificationCenter.default.addObserver(
-         forName: NSNotification.Name(rawValue: "NSApplicationDidChangeScreenParametersNotification"),
-         object: NSApplication.shared,
-         queue: .main) { notification in
-            if let dateWindow = self.dateWindow {
-               dateWindow.close()
-            }
-            if let timeWindow = self.timeWindow {
-               timeWindow.close()
-            }
-            self.initializeAllScreens()
+      if let observer = self.screenChangeObserver {
+         NotificationCenter.default.removeObserver(observer)
+      }
+      self.screenChangeObserver = NotificationCenter.default.addObserver(
+         forName: NSApplication.didChangeScreenParametersNotification,
+         object: nil,
+         queue: .main) { [weak self] _ in
+            self?.initializeAllScreens()
          }
+   }
+
+   func registerEmbeddedFonts() {
+      guard let fontURL = Bundle.main.url(forResource: "white-rabbit", withExtension: "ttf") else {
+         return
+      }
+
+      _ = CTFontManagerRegisterFontsForURL(fontURL as CFURL, .process, nil)
    }
 
    func initLabel(font: String, fontHeight: Double, screen: NSScreen, format: String, interval: TimeInterval, dummytext: String) -> TickingTextField {
 
       let formatter = DateFormatter()
       formatter.dateFormat = format
+      formatter.locale = Locale.autoupdatingCurrent
 
 //      let tmpLabel = NSTextField()
 //      tmpLabel.font = NSFont(name: font, size: 20)
@@ -75,18 +182,19 @@ class Clock: NSObject, NSApplicationDelegate {
 //      tmpLabel.alignment = .center
 //      tmpLabel.stringValue = dummytext
 
-      let pixelsPerPoint = NSFont(name: font, size: 20)!.boundingRectForFont.height / 20.0
+      let baseFont = NSFont(name: font, size: 20) ?? NSFont.monospacedDigitSystemFont(ofSize: 20, weight: .regular)
+      let pixelsPerPoint = baseFont.boundingRectForFont.height / baseFont.pointSize
 //      let tmpLabelHeight = tmpLabel.frame.height
 //      let pixelsPerPoint = Double(tmpLabelHeight) / 20.0
 
       let label = TickingTextField()
 
       if fontHeight < 1.0 {
-         let resolvedFontSize = screen.frame.height * fontHeight / pixelsPerPoint
-         label.font = NSFont(name: font, size: resolvedFontSize)
+         let resolvedFontSize = screen.visibleFrame.height * fontHeight / pixelsPerPoint
+         label.font = NSFont(name: font, size: resolvedFontSize) ?? NSFont.monospacedDigitSystemFont(ofSize: resolvedFontSize, weight: .regular)
       }
       else {
-         label.font = NSFont(name: font, size: fontHeight)
+         label.font = NSFont(name: font, size: fontHeight) ?? NSFont.monospacedDigitSystemFont(ofSize: fontHeight, weight: .regular)
       }
 
       label.isBezeled = false
@@ -107,13 +215,18 @@ class Clock: NSObject, NSApplicationDelegate {
       return label
    }
 
-   func initWindow(label: TickingTextField, name: String, screen: NSScreen, stickWin: EvasiveWindow? = nil) -> EvasiveWindow {
-      let window = EvasiveWindow(label: label, name: name, screen: screen, stickWin: stickWin)
+   func initWindow(label: TickingTextField, name: String, screen: NSScreen, stickWin: EvasiveWindow? = nil, orientation: Int? = nil) -> EvasiveWindow {
+      let window = EvasiveWindow(label: label,
+                                 name: name,
+                                 screen: screen,
+                                 stickWin: stickWin,
+                                 dodgesMouse: self.configuration.dodgesMouse,
+                                 initialOrientation: orientation)
 
       return window
    }
 
-   func initDater(screen: NSScreen) {
+   func initDater(screen: NSScreen, stickWindow: EvasiveWindow) -> EvasiveWindow {
 //      if self.dateFontSize < 1.0 {
 //         self.dateFontSize = self.dateFontSize * screen.frame.height
 //      }
@@ -127,15 +240,15 @@ class Clock: NSObject, NSApplicationDelegate {
          dummytext: "XXX XX"
       )
 
-      self.dateWindow = self.initWindow(
+      return self.initWindow(
          label: label,
          name: "dater",
          screen: screen,
-         stickWin: self.timeWindow!
+         stickWin: stickWindow
       )
    }
 
-   func initTimer(screen: NSScreen) {
+   func initTimer(screen: NSScreen) -> EvasiveWindow {
       let label = self.initLabel(
          font: self.timeFont,
          fontHeight: self.timeFontSize,
@@ -145,10 +258,22 @@ class Clock: NSObject, NSApplicationDelegate {
          dummytext: "99:99"
       )
 
-      self.timeWindow = self.initWindow(
+      return self.initWindow(
          label: label,
          name: "timer",
-         screen: screen
+         screen: screen,
+         orientation: self.configuration.initialCorner.orientationValue
       )
+   }
+}
+
+private extension NSScreen {
+   var displayID: CGDirectDisplayID? {
+      let key = NSDeviceDescriptionKey("NSScreenNumber")
+      guard let screenNumber = self.deviceDescription[key] as? NSNumber else {
+         return nil
+      }
+
+      return CGDirectDisplayID(screenNumber.uint32Value)
    }
 }

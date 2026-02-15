@@ -9,3 +9,33 @@ Out of the box, MacOS has a menu bar and dock, always visible by default, eating
 ** The problem
 Most people hide the dock. But losing the menubar and the clock along with it held me back for years. And I expect I'm not the only one.
 
+* Building, testing, and releasing
+#+begin_example
+make build        # Debug build
+make test         # Debug build + tests
+make clean        # Clean build artifacts and DerivedData/dist
+make release      # Release build + dist/clockfloat-<version>.zip
+#+end_example
+
+`make release` compiles the Release configuration, places the `.app` bundle under `DerivedData`, and produces a zipped artifact plus its SHA256 in `dist/`. Upload that archive to GitHub (or wherever you host your tap assets) before updating your Homebrew tap.
+
+* Homebrew tap workflow
+1. Run `make release` locally and commit/tag the version.
+2. Upload `dist/clockfloat-<ver>.zip` to your release hosting (e.g. GitHub Release) and copy the SHA256 from `dist/clockfloat-<ver>.zip.sha256`.
+3. In your tap repo, create a Cask (preferred for `.app` bundles) similar to:
+
+#+begin_src ruby
+cask "clockfloat" do
+  version "1.0.0"
+  sha256 "<sha from dist>"
+
+  url "https://github.com/<you>/clockfloat/releases/download/v#{version}/clockfloat-#{version}.zip"
+  name "Clockfloat"
+  desc "Minimal floating clock"
+  homepage "https://github.com/<you>/clockfloat"
+
+  app "clockfloat.app"
+end
+#+end_src
+
+4. `brew tap <you>/clockfloat` and `brew install --cask clockfloat` to verify.
