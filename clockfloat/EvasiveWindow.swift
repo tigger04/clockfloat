@@ -24,6 +24,8 @@ import Cocoa
 
 class EvasiveWindow: NSWindow {
 
+   static let positionCount = 6
+
    var xpadding: CGFloat = 5
    var ypadding: CGFloat = 5
    var wMarginRatio: CGFloat = 1.3
@@ -34,25 +36,28 @@ class EvasiveWindow: NSWindow {
 
    var orientation: Int = 2 // default
    // 0 = topleft, 1 = topright, 2 = bottomright, 3 = bottomleft
+   // 4 = centerTop, 5 = centerBottom
 
    var name: String = "untitled"
 
-   var tickingLabel : TickingTextField?
+   var tickingLabel: TickingTextField?
 
-   var targetScreen : NSScreen?
+   var targetScreen: NSScreen?
 
-   private let dodgesMouse: Bool
+   private let hoverBehavior: HoverBehavior
+   private var hideTimer: Timer?
 
    public init(label: TickingTextField,
                name: String,
                screen: NSScreen,
                stickWin: EvasiveWindow? = nil,
-               dodgesMouse: Bool = true,
+               hoverBehavior: HoverBehavior = .dodge,
+               backgroundOpacity: Double = 0.75,
                initialOrientation: Int? = nil)
    {
       self.name = name
       self.targetScreen = screen
-      self.dodgesMouse = dodgesMouse
+      self.hoverBehavior = hoverBehavior
 
       let winHeight = label.fittingSize.height * self.hMarginRatio
       var winWidth = label.fittingSize.width * self.wMarginRatio
@@ -63,7 +68,7 @@ class EvasiveWindow: NSWindow {
       }
 
       if let initialOrientation = initialOrientation {
-         self.orientation = initialOrientation % 4
+         self.orientation = initialOrientation % EvasiveWindow.positionCount
       }
 
       let winRect = NSRect(x: 0, y: 0,
@@ -85,7 +90,7 @@ class EvasiveWindow: NSWindow {
       let stringHeight: CGFloat = label.fittingSize.height
       let cell = HoverTrackingCellView()
       cell.windowOwner = self
-      cell.hoverEnabled = dodgesMouse
+      cell.hoverBehavior = hoverBehavior
       cell.frame = NSRect(x: 0, y: 0, width: winWidth, height: label.fittingSize.height)
       label.frame = cell.frame
       label.alignment = .center
@@ -93,8 +98,6 @@ class EvasiveWindow: NSWindow {
       let frame = label.frame
       var titleRect: NSRect = label.cell!.titleRect(forBounds: frame)
 
-      //        titleRect.size.height = label.fittingSize.height
-      //        titleRect.size.width = label.fittingSize.width
       titleRect.origin.y = frame.origin.y + (winHeight - stringHeight) / 2
       label.frame = titleRect
       cell.addSubview(label)
@@ -106,18 +109,18 @@ class EvasiveWindow: NSWindow {
       self.isMovableByWindowBackground = true
       self.level = .floating
       self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-      self.backgroundColor = NSColor(red: 0, green: 0, blue: 0, alpha: 0.75)
+      self.backgroundColor = NSColor(red: 0, green: 0, blue: 0, alpha: CGFloat(backgroundOpacity))
 
       self.orderFrontRegardless()
       self.refreshOrigin()
    }
 
    public func move() {
-      guard self.dodgesMouse else { return }
+      guard self.hoverBehavior == .dodge else { return }
       print("\(self.name) move")
 
       if self.stickToWindow == nil {
-         self.orientation = Int(self.getOrientation() + 1) % 4
+         self.orientation = Int(self.getOrientation() + 1) % EvasiveWindow.positionCount
          self.refreshOrigin()
 
          if self.stuckToMeWindow != nil {
@@ -126,6 +129,35 @@ class EvasiveWindow: NSWindow {
       }
       else {
          self.stickToWindow!.move()
+      }
+   }
+
+   /// Fade out the window, then fade back in after 5 seconds.
+   public func hideTemporarily() {
+      guard self.hoverBehavior == .hide else { return }
+
+      // Cancel any pending reappearance
+      self.hideTimer?.invalidate()
+      self.stuckToMeWindow?.hideTimer?.invalidate()
+
+      self.ignoresMouseEvents = true
+      self.stuckToMeWindow?.ignoresMouseEvents = true
+
+      NSAnimationContext.runAnimationGroup({ context in
+         context.duration = 0.3
+         self.animator().alphaValue = 0.0
+         self.stuckToMeWindow?.animator().alphaValue = 0.0
+      }) {
+         self.hideTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
+            guard let self = self else { return }
+            self.ignoresMouseEvents = false
+            self.stuckToMeWindow?.ignoresMouseEvents = false
+            NSAnimationContext.runAnimationGroup({ context in
+               context.duration = 0.5
+               self.animator().alphaValue = 1.0
+               self.stuckToMeWindow?.animator().alphaValue = 1.0
+            })
+         }
       }
    }
 
@@ -144,13 +176,14 @@ class EvasiveWindow: NSWindow {
       if let stickWin = self.stickToWindow {
          print("\(self.name) must stick to \(stickWin.name)")
 
-         if self.getOrientation() < 2 {
-            let x = stickWin.frame.origin.x
+         // Top positions: date goes below time. Bottom positions: date goes above time.
+         let isTopPosition = [0, 1, 4].contains(self.getOrientation())
+         let x = stickWin.frame.origin.x
+         if isTopPosition {
             let y = stickWin.frame.origin.y - self.frame.height
             self.setFrameOrigin(NSPoint(x: x, y: y))
          }
          else {
-            let x = stickWin.frame.origin.x
             let y = stickWin.frame.origin.y + stickWin.frame.height
             self.setFrameOrigin(NSPoint(x: x, y: y))
          }
@@ -183,24 +216,33 @@ class EvasiveWindow: NSWindow {
          case 3: // bottomleft
             x = self.xpadding + screenX
             y = self.ypadding + screenY
+         case 4: // centerTop
+            x = (screenW - width) / 2 + screenX
+            y = screenH - height - self.ypadding + screenY
+         case 5: // centerBottom
+            x = (screenW - width) / 2 + screenX
+            y = self.ypadding + screenY
          default:
-            exit(1)
+            x = screenW - width - self.xpadding + screenX
+            y = self.ypadding + screenY
          }
 
          self.setFrameOrigin(NSPoint(x: x, y: y))
       }
-      //        self.setContentSize(NSSize(width: width, height: height))
    }
 
-   //    public func setStickToWindow(win: EvasiveWindow) {
-   //        self.stickToWindow = win
-   //        self.frame.size.width = self.stickToWindow.frame.size.width
-   //        self.refreshOrigin()
-   //    }
-
    override func close() {
+      self.hideTimer?.invalidate()
       self.tickingLabel?.killTimer()
       super.close()
+   }
+
+   override func mouseDown(with event: NSEvent) {
+      if event.modifierFlags.contains(.shift) {
+         SettingsWindow.shared.showSettings()
+         return
+      }
+      super.mouseDown(with: event)
    }
 
    override func rightMouseDown(with event: NSEvent) {
@@ -211,6 +253,7 @@ class EvasiveWindow: NSWindow {
 
    deinit {
       print("EvasiveWindow.deinit (\(self.name))")
+      self.hideTimer?.invalidate()
       if let tickingLabel = self.tickingLabel {
          tickingLabel.killTimer()
       }
@@ -220,9 +263,9 @@ class EvasiveWindow: NSWindow {
 private final class HoverTrackingCellView: NSTableCellView {
    weak var windowOwner: EvasiveWindow?
    private var trackingArea: NSTrackingArea?
-   var hoverEnabled: Bool = true {
+   var hoverBehavior: HoverBehavior = .dodge {
       didSet {
-         if hoverEnabled != oldValue {
+         if hoverBehavior != oldValue {
             self.updateTrackingAreas()
          }
       }
@@ -236,7 +279,7 @@ private final class HoverTrackingCellView: NSTableCellView {
          self.trackingArea = nil
       }
 
-      guard self.hoverEnabled else { return }
+      guard self.hoverBehavior != .none else { return }
 
       let options: NSTrackingArea.Options = [.activeAlways, .mouseEnteredAndExited, .inVisibleRect]
       let area = NSTrackingArea(rect: self.bounds, options: options, owner: self, userInfo: nil)
@@ -246,7 +289,17 @@ private final class HoverTrackingCellView: NSTableCellView {
 
    override func mouseEntered(with event: NSEvent) {
       super.mouseEntered(with: event)
-      guard self.hoverEnabled else { return }
-      self.windowOwner?.move()
+      guard self.hoverBehavior != .none else { return }
+      // Shift held: stay put so the user can interact with the clock
+      guard !event.modifierFlags.contains(.shift) else { return }
+
+      switch self.hoverBehavior {
+      case .dodge:
+         self.windowOwner?.move()
+      case .hide:
+         self.windowOwner?.hideTemporarily()
+      case .none:
+         break
+      }
    }
 }

@@ -24,12 +24,30 @@ import Cocoa
 import CoreGraphics
 import CoreText
 
+// MARK: - Notification
+
+extension Notification.Name {
+   static let clockConfigurationDidChange = Notification.Name("clockConfigurationDidChange")
+}
+
+// MARK: - HoverBehavior
+
+enum HoverBehavior: String {
+   case dodge   // move to opposite corner
+   case hide    // fade out for 5s
+   case none    // do nothing, draggable
+}
+
+// MARK: - ClockConfiguration
+
 struct ClockConfiguration {
    enum Corner: String {
       case topLeft
       case topRight
       case bottomRight
       case bottomLeft
+      case centerTop
+      case centerBottom
 
       var orientationValue: Int {
          switch self {
@@ -37,6 +55,8 @@ struct ClockConfiguration {
          case .topRight: return 1
          case .bottomRight: return 2
          case .bottomLeft: return 3
+         case .centerTop: return 4
+         case .centerBottom: return 5
          }
       }
    }
@@ -45,15 +65,38 @@ struct ClockConfiguration {
    var dateFontSize: Double
    var timeFontSize: Double
    var initialCorner: Corner
-   var dodgesMouse: Bool
+   var hoverBehavior: HoverBehavior
+   var timeFormat: String
+   var dateFormat: String
+   var lateEnabled: Bool
+   var lateOffsetMinutes: Int
+   var opacity: Double
 
-   private struct Keys {
+   /// Late offset converted to seconds; 0 when disabled.
+   var lateOffsetSeconds: Double {
+      lateEnabled ? Double(lateOffsetMinutes) * 60.0 : 0.0
+   }
+
+   /// Text alpha derived from opacity (approximately 2/3 of background).
+   var textAlpha: Double {
+      opacity * 0.67
+   }
+
+   struct Keys {
       static let fontName = "ClockFontName"
       static let dateFontSize = "ClockDateFontSize"
       static let timeFontSize = "ClockTimeFontSize"
       static let initialCorner = "ClockInitialCorner"
-      static let dodgesMouse = "ClockDodgesMouse"
+      static let hoverBehavior = "ClockHoverBehavior"
+      static let timeFormat = "ClockTimeFormat"
+      static let dateFormat = "ClockDateFormat"
+      static let lateEnabled = "ClockLateEnabled"
+      static let lateOffsetMinutes = "ClockLateOffsetMinutes"
+      static let opacity = "ClockOpacity"
+      static let fontSizeMigrated = "ClockFontSizeMigrated"
    }
+
+   // MARK: - Load
 
    static func load(userDefaults: UserDefaults = .standard) -> ClockConfiguration {
       userDefaults.register(defaults: [
@@ -61,21 +104,69 @@ struct ClockConfiguration {
          Keys.dateFontSize: 0.01,
          Keys.timeFontSize: 0.014,
          Keys.initialCorner: Corner.bottomRight.rawValue,
-         Keys.dodgesMouse: true,
+         Keys.hoverBehavior: HoverBehavior.dodge.rawValue,
+         Keys.timeFormat: "HH:mm",
+         Keys.dateFormat: "E d",
+         Keys.lateEnabled: true,
+         Keys.lateOffsetMinutes: 3,
+         Keys.opacity: 0.75,
       ])
 
-      let font = userDefaults.string(forKey: Keys.fontName) ?? "White Rabbit"
-      let dateSize = userDefaults.object(forKey: Keys.dateFontSize) as? Double ?? 0.01
-      let timeSize = userDefaults.object(forKey: Keys.timeFontSize) as? Double ?? 0.014
+      let fontName = userDefaults.string(forKey: Keys.fontName) ?? "White Rabbit"
+      var dateSize = userDefaults.object(forKey: Keys.dateFontSize) as? Double ?? 0.01
+      var timeSize = userDefaults.object(forKey: Keys.timeFontSize) as? Double ?? 0.014
       let cornerRaw = userDefaults.string(forKey: Keys.initialCorner) ?? Corner.bottomRight.rawValue
       let corner = Corner(rawValue: cornerRaw) ?? .bottomRight
-      let dodges = userDefaults.object(forKey: Keys.dodgesMouse) as? Bool ?? true
+      let behaviorRaw = userDefaults.string(forKey: Keys.hoverBehavior) ?? HoverBehavior.dodge.rawValue
+      let behavior = HoverBehavior(rawValue: behaviorRaw) ?? .dodge
+      let timeFormat = userDefaults.string(forKey: Keys.timeFormat) ?? "HH:mm"
+      let dateFormat = userDefaults.string(forKey: Keys.dateFormat) ?? "E d"
+      let lateEnabled = userDefaults.object(forKey: Keys.lateEnabled) as? Bool ?? true
+      let lateMinutes = userDefaults.object(forKey: Keys.lateOffsetMinutes) as? Int ?? 3
+      let opacity = userDefaults.object(forKey: Keys.opacity) as? Double ?? 0.75
 
-      return ClockConfiguration(fontName: font,
+      // Migrate ratio-based font sizes to absolute point sizes
+      if !userDefaults.bool(forKey: Keys.fontSizeMigrated) && dateSize < 1.0 && timeSize < 1.0 {
+         let screenHeight = NSScreen.main?.visibleFrame.height ?? 1055.0
+         let baseFont = NSFont(name: fontName, size: 20) ?? NSFont.monospacedDigitSystemFont(ofSize: 20, weight: .regular)
+         let pixelsPerPoint = baseFont.boundingRectForFont.height / baseFont.pointSize
+
+         dateSize = screenHeight * dateSize / pixelsPerPoint
+         timeSize = screenHeight * timeSize / pixelsPerPoint
+
+         userDefaults.set(dateSize, forKey: Keys.dateFontSize)
+         userDefaults.set(timeSize, forKey: Keys.timeFontSize)
+         userDefaults.set(true, forKey: Keys.fontSizeMigrated)
+      }
+
+      return ClockConfiguration(fontName: fontName,
                                 dateFontSize: dateSize,
                                 timeFontSize: timeSize,
                                 initialCorner: corner,
-                                dodgesMouse: dodges)
+                                hoverBehavior: behavior,
+                                timeFormat: timeFormat,
+                                dateFormat: dateFormat,
+                                lateEnabled: lateEnabled,
+                                lateOffsetMinutes: lateMinutes,
+                                opacity: opacity)
+   }
+
+   // MARK: - Save
+
+   func save(to userDefaults: UserDefaults = .standard) {
+      userDefaults.set(fontName, forKey: Keys.fontName)
+      userDefaults.set(dateFontSize, forKey: Keys.dateFontSize)
+      userDefaults.set(timeFontSize, forKey: Keys.timeFontSize)
+      userDefaults.set(initialCorner.rawValue, forKey: Keys.initialCorner)
+      userDefaults.set(hoverBehavior.rawValue, forKey: Keys.hoverBehavior)
+      userDefaults.set(timeFormat, forKey: Keys.timeFormat)
+      userDefaults.set(dateFormat, forKey: Keys.dateFormat)
+      userDefaults.set(lateEnabled, forKey: Keys.lateEnabled)
+      userDefaults.set(lateOffsetMinutes, forKey: Keys.lateOffsetMinutes)
+      userDefaults.set(opacity, forKey: Keys.opacity)
+      userDefaults.set(true, forKey: Keys.fontSizeMigrated)
+
+      NotificationCenter.default.post(name: .clockConfigurationDidChange, object: nil)
    }
 }
 
@@ -87,6 +178,7 @@ class Clock: NSObject, NSApplicationDelegate {
 
    private var windowsByDisplayID: [CGDirectDisplayID: WindowPair] = [:]
    private var screenChangeObserver: NSObjectProtocol?
+   private var configChangeObserver: NSObjectProtocol?
 
    var dateFont: String
    var dateFontSize: Double
@@ -94,9 +186,12 @@ class Clock: NSObject, NSApplicationDelegate {
    var timeFont: String
    var timeFontSize: Double
 
-   var late : Double = 150
+   var configuration: ClockConfiguration
 
-   let configuration: ClockConfiguration
+   /// Late offset in seconds, derived from configuration.
+   var late: Double {
+      configuration.lateOffsetSeconds
+   }
 
    override init() {
       let configuration = ClockConfiguration.load()
@@ -112,10 +207,14 @@ class Clock: NSObject, NSApplicationDelegate {
       self.registerEmbeddedFonts()
       self.initializeAllScreens()
       self.watchForScreenChanges()
+      self.watchForConfigChanges()
    }
 
    func applicationWillTerminate(_ notification: Notification) {
       if let observer = self.screenChangeObserver {
+         NotificationCenter.default.removeObserver(observer)
+      }
+      if let observer = self.configChangeObserver {
          NotificationCenter.default.removeObserver(observer)
       }
       self.teardownAllScreens()
@@ -123,6 +222,9 @@ class Clock: NSObject, NSApplicationDelegate {
 
    deinit {
       if let observer = self.screenChangeObserver {
+         NotificationCenter.default.removeObserver(observer)
+      }
+      if let observer = self.configChangeObserver {
          NotificationCenter.default.removeObserver(observer)
       }
    }
@@ -157,6 +259,24 @@ class Clock: NSObject, NSApplicationDelegate {
          object: nil,
          queue: .main) { [weak self] _ in
             self?.initializeAllScreens()
+         }
+   }
+
+   func watchForConfigChanges() {
+      if let observer = self.configChangeObserver {
+         NotificationCenter.default.removeObserver(observer)
+      }
+      self.configChangeObserver = NotificationCenter.default.addObserver(
+         forName: .clockConfigurationDidChange,
+         object: nil,
+         queue: .main) { [weak self] _ in
+            guard let self = self else { return }
+            self.configuration = ClockConfiguration.load()
+            self.dateFont = self.configuration.fontName
+            self.timeFont = self.configuration.fontName
+            self.dateFontSize = self.configuration.dateFontSize
+            self.timeFontSize = self.configuration.timeFontSize
+            self.initializeAllScreens()
          }
    }
 
@@ -203,7 +323,7 @@ class Clock: NSObject, NSApplicationDelegate {
       label.alignment = .center
       label.stringValue = dummytext
 
-      label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: 0.5)
+      label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: self.configuration.textAlpha)
 //        label.sizeToFit()
 
       label.timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
@@ -220,7 +340,8 @@ class Clock: NSObject, NSApplicationDelegate {
                                  name: name,
                                  screen: screen,
                                  stickWin: stickWin,
-                                 dodgesMouse: self.configuration.dodgesMouse,
+                                 hoverBehavior: self.configuration.hoverBehavior,
+                                 backgroundOpacity: self.configuration.opacity,
                                  initialOrientation: orientation)
 
       return window
@@ -235,7 +356,7 @@ class Clock: NSObject, NSApplicationDelegate {
          font: self.dateFont,
          fontHeight: self.dateFontSize,
          screen: screen,
-         format: "E d",
+         format: self.configuration.dateFormat,
          interval: 10,
          dummytext: "XXX XX"
       )
@@ -253,7 +374,7 @@ class Clock: NSObject, NSApplicationDelegate {
          font: self.timeFont,
          fontHeight: self.timeFontSize,
          screen: screen,
-         format: "HH:mm",
+         format: self.configuration.timeFormat,
          interval: 1,
          dummytext: "99:99"
       )

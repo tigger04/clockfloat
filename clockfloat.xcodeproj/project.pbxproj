@@ -10,6 +10,7 @@
 		6B22EF4D29A04CCD0066B418 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B22EF4C29A04CCD0066B418 /* main.swift */; };
 		6B24585729A20C50009F86D7 /* EvasiveWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B24585629A20C50009F86D7 /* EvasiveWindow.swift */; };
 		6B2B9F4F29BE473100917DD0 /* TickingTextArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B2B9F4E29BE473100917DD0 /* TickingTextArea.swift */; };
+		6B41898B2F54C48900D1E5E6 /* SettingsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B41898A2F54C48900D1E5E6 /* SettingsWindow.swift */; };
 		6B6C4C4F29A1132B0066C295 /* VerticallyCenteredTextFieldCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B6C4C4E29A1132B0066C295 /* VerticallyCenteredTextFieldCell.swift */; };
 		6B8899A429F5C6C900123456 /* white-rabbit.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6B8899A329F5C6C900123456 /* white-rabbit.ttf */; };
 		6BFC217929A0494300AD53CA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6BFC217829A0494300AD53CA /* Assets.xcassets */; };
@@ -41,6 +42,7 @@
 		6B22EF4C29A04CCD0066B418 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		6B24585629A20C50009F86D7 /* EvasiveWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvasiveWindow.swift; sourceTree = "<group>"; };
 		6B2B9F4E29BE473100917DD0 /* TickingTextArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TickingTextArea.swift; sourceTree = "<group>"; };
+		6B41898A2F54C48900D1E5E6 /* SettingsWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindow.swift; sourceTree = "<group>"; };
 		6B6C4C4E29A1132B0066C295 /* VerticallyCenteredTextFieldCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerticallyCenteredTextFieldCell.swift; sourceTree = "<group>"; };
 		6B8899A329F5C6C900123456 /* white-rabbit.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "white-rabbit.ttf"; sourceTree = "<group>"; };
 		6BFC217129A0494200AD53CA /* clockfloat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = clockfloat.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -112,6 +114,7 @@
 				6BFC217829A0494300AD53CA /* Assets.xcassets */,
 				6BFC217D29A0494300AD53CA /* clockfloat.entitlements */,
 				6BFC217A29A0494300AD53CA /* Preview Content */,
+				6B41898A2F54C48900D1E5E6 /* SettingsWindow.swift */,
 			);
 			path = clockfloat;
 			sourceTree = "<group>";
@@ -276,6 +279,7 @@
 				6B24585729A20C50009F86D7 /* EvasiveWindow.swift in Sources */,
 				6B22EF4D29A04CCD0066B418 /* main.swift in Sources */,
 				6B2B9F4F29BE473100917DD0 /* TickingTextArea.swift in Sources */,
+				6B41898B2F54C48900D1E5E6 /* SettingsWindow.swift in Sources */,
 				6B6C4C4F29A1132B0066C295 /* VerticallyCenteredTextFieldCell.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -433,12 +437,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = clockfloat/clockfloat.entitlements;
 				CODE_SIGN_IDENTITY = "-";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"clockfloat/Preview Content\"";
-				DEVELOPMENT_TEAM = 2H98A242M4;
+				DEVELOPMENT_TEAM = GLVW6FZ3DS;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -462,13 +466,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = clockfloat/clockfloat.entitlements;
 				CODE_SIGN_IDENTITY = "Developer ID Application";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
-				CODE_SIGN_STYLE = Manual;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"clockfloat/Preview Content\"";
 				DEVELOPMENT_TEAM = 2H98A242M4;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = GLVW6FZ3DS;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -478,10 +483,10 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_BUNDLE_IDENTIFIER = ie.tigger.clock.clockfloat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.9;
 			};
@@ -492,6 +497,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = GLVW6FZ3DS;
@@ -511,6 +517,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = GLVW6FZ3DS;
@@ -529,6 +536,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = GLVW6FZ3DS;
@@ -546,6 +554,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = GLVW6FZ3DS;

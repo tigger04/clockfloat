@@ -12,4 +12,5 @@ let app = NSApplication.shared
 let clock = Clock()
 app.delegate = clock
 app.setActivationPolicy(.accessory)
+
 app.run()
