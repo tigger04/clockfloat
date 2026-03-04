@@ -107,7 +107,7 @@ class EvasiveWindow: NSWindow {
       cell.updateTrackingAreas()
       self.ignoresMouseEvents = false
       self.isMovableByWindowBackground = true
-      self.level = .floating
+      self.level = .statusBar
       self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
       self.backgroundColor = NSColor(red: 0, green: 0, blue: 0, alpha: CGFloat(backgroundOpacity))
 
@@ -237,18 +237,8 @@ class EvasiveWindow: NSWindow {
       super.close()
    }
 
-   override func mouseDown(with event: NSEvent) {
-      if event.modifierFlags.contains(.shift) {
-         SettingsWindow.shared.showSettings()
-         return
-      }
-      super.mouseDown(with: event)
-   }
-
    override func rightMouseDown(with event: NSEvent) {
-      super.rightMouseDown(with: event)
-      print("right mouse button down")
-      self.move()
+      SettingsWindow.shared.showSettings()
    }
 
    deinit {

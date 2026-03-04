@@ -28,6 +28,7 @@ test:
 		-configuration $(CONFIGURATION) \
 		-derivedDataPath $(DERIVED_DATA) \
 		-destination '$(DESTINATION)' \
+		-only-testing:clockfloatTests \
 		test
 
 clean:

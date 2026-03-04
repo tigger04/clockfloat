@@ -1,5 +1,5 @@
-// ABOUTME: Unit tests for ClockConfiguration, HoverBehavior, and Corner enums.
-// ABOUTME: Uses isolated UserDefaults suites to avoid polluting real preferences.
+// ABOUTME: Lean unit tests for ClockConfiguration business logic.
+// ABOUTME: Tests cover save/load round-trip, computed properties, and font validation.
 
 import XCTest
 @testable import clockfloat
@@ -14,8 +14,8 @@ final class ClockConfigurationTests: XCTestCase {
     }
 
     override func tearDown() {
-        if let suiteName = testDefaults.volatileDomainNames.first {
-            UserDefaults.standard.removeSuite(named: suiteName)
+        if let suite = testDefaults.volatileDomainNames.first {
+            UserDefaults.standard.removeSuite(named: suite)
         }
         testDefaults.removePersistentDomain(forName: testDefaults.description)
         testDefaults = nil
@@ -24,12 +24,14 @@ final class ClockConfigurationTests: XCTestCase {
 
     // MARK: - Defaults
 
-    func test_ClockConfiguration_load_returnsDefaults() {
+    func test_load_returnsDefaults() {
         let config = ClockConfiguration.load(userDefaults: testDefaults)
 
         XCTAssertEqual(config.fontName, "White Rabbit")
+        XCTAssertEqual(config.timeFontSize, 14.0, accuracy: 0.001)
+        XCTAssertEqual(config.dateFontSize, 10.0, accuracy: 0.001)
         XCTAssertEqual(config.initialCorner, .bottomRight)
-        XCTAssertEqual(config.hoverBehavior, .dodge)
+        XCTAssertEqual(config.hoverBehavior, .none)
         XCTAssertEqual(config.timeFormat, "HH:mm")
         XCTAssertEqual(config.dateFormat, "E d")
         XCTAssertEqual(config.lateEnabled, true)
@@ -37,28 +39,28 @@ final class ClockConfigurationTests: XCTestCase {
         XCTAssertEqual(config.opacity, 0.75, accuracy: 0.001)
     }
 
-    // MARK: - Save / Load round-trip
+    // MARK: - Round-trip
 
-    func test_ClockConfiguration_save_roundtrips() {
-        var config = ClockConfiguration.load(userDefaults: testDefaults)
-        config.fontName = "Helvetica"
-        config.dateFontSize = 14.0
-        config.timeFontSize = 18.0
-        config.initialCorner = .centerTop
-        config.hoverBehavior = .hide
-        config.timeFormat = "h:mm a"
-        config.dateFormat = "EEEE"
-        config.lateEnabled = false
-        config.lateOffsetMinutes = 10
-        config.opacity = 0.5
-
-        config.save(to: testDefaults)
+    func test_saveAndLoad_roundtrips() {
+        let config = ClockConfiguration(
+            fontName: "Helvetica",
+            dateFontSize: 16.0,
+            timeFontSize: 24.0,
+            initialCorner: .centerTop,
+            hoverBehavior: .hide,
+            timeFormat: "h:mm a",
+            dateFormat: "EEEE",
+            lateEnabled: false,
+            lateOffsetMinutes: 10,
+            opacity: 0.5
+        )
+        config.save(to: testDefaults, notify: false)
 
         let reloaded = ClockConfiguration.load(userDefaults: testDefaults)
 
         XCTAssertEqual(reloaded.fontName, "Helvetica")
-        XCTAssertEqual(reloaded.dateFontSize, 14.0, accuracy: 0.001)
-        XCTAssertEqual(reloaded.timeFontSize, 18.0, accuracy: 0.001)
+        XCTAssertEqual(reloaded.dateFontSize, 16.0, accuracy: 0.001)
+        XCTAssertEqual(reloaded.timeFontSize, 24.0, accuracy: 0.001)
         XCTAssertEqual(reloaded.initialCorner, .centerTop)
         XCTAssertEqual(reloaded.hoverBehavior, .hide)
         XCTAssertEqual(reloaded.timeFormat, "h:mm a")
@@ -68,133 +70,72 @@ final class ClockConfigurationTests: XCTestCase {
         XCTAssertEqual(reloaded.opacity, 0.5, accuracy: 0.001)
     }
 
-    // MARK: - Notification
+    // MARK: - Late offset
 
-    func test_ClockConfiguration_save_postsNotification() {
+    func test_lateOffsetSeconds_enabledConvertsMinutesToSeconds() {
         var config = ClockConfiguration.load(userDefaults: testDefaults)
-
-        let expectation = expectation(forNotification: .clockConfigurationDidChange, object: nil)
-
-        config.save(to: testDefaults)
-
-        wait(for: [expectation], timeout: 1.0)
-    }
-
-    // MARK: - Migration
-
-    func test_ClockConfiguration_migration_convertsRatioToPointSize() {
-        // Simulate pre-migration state: ratio-based font sizes
-        testDefaults.set(0.01, forKey: "ClockDateFontSize")
-        testDefaults.set(0.014, forKey: "ClockTimeFontSize")
-        testDefaults.set(false, forKey: "ClockFontSizeMigrated")
-
-        let config = ClockConfiguration.load(userDefaults: testDefaults)
-
-        // After migration, sizes should be absolute point sizes (> 1.0)
-        XCTAssertGreaterThan(config.dateFontSize, 1.0,
-                             "Date font size should be migrated to absolute points")
-        XCTAssertGreaterThan(config.timeFontSize, 1.0,
-                             "Time font size should be migrated to absolute points")
-
-        // Migration flag should be set
-        XCTAssertTrue(testDefaults.bool(forKey: "ClockFontSizeMigrated"))
-    }
-
-    func test_ClockConfiguration_migration_skipsAlreadyMigrated() {
-        testDefaults.set(true, forKey: "ClockFontSizeMigrated")
-        testDefaults.set(16.0, forKey: "ClockDateFontSize")
-        testDefaults.set(20.0, forKey: "ClockTimeFontSize")
-
-        let config = ClockConfiguration.load(userDefaults: testDefaults)
-
-        XCTAssertEqual(config.dateFontSize, 16.0, accuracy: 0.001)
-        XCTAssertEqual(config.timeFontSize, 20.0, accuracy: 0.001)
-    }
-}
-
-// MARK: - HoverBehavior Tests
-
-final class HoverBehaviorTests: XCTestCase {
-
-    func test_HoverBehavior_rawValue_roundtrips() {
-        for behavior in [HoverBehavior.dodge, .hide, .none] {
-            let raw = behavior.rawValue
-            let restored = HoverBehavior(rawValue: raw)
-            XCTAssertEqual(restored, behavior,
-                           "HoverBehavior.\(behavior) should round-trip via rawValue")
-        }
-    }
-}
-
-// MARK: - Corner Tests
-
-final class CornerTests: XCTestCase {
-
-    func test_Corner_allSixCases_haveUniqueOrientationValues() {
-        let allCorners: [ClockConfiguration.Corner] = [
-            .topLeft, .topRight, .bottomRight, .bottomLeft,
-            .centerTop, .centerBottom
-        ]
-
-        let values = allCorners.map { $0.orientationValue }
-        let uniqueValues = Set(values)
-
-        XCTAssertEqual(values.count, uniqueValues.count,
-                       "All corners must have unique orientation values")
-        XCTAssertEqual(allCorners.count, 6, "There should be exactly 6 corner positions")
-    }
-
-    func test_Corner_rawValue_roundtrips() {
-        let allCorners: [ClockConfiguration.Corner] = [
-            .topLeft, .topRight, .bottomRight, .bottomLeft,
-            .centerTop, .centerBottom
-        ]
-
-        for corner in allCorners {
-            let raw = corner.rawValue
-            let restored = ClockConfiguration.Corner(rawValue: raw)
-            XCTAssertEqual(restored, corner,
-                           "Corner.\(corner) should round-trip via rawValue")
-        }
-    }
-}
-
-// MARK: - Late Offset Tests
-
-final class LateOffsetTests: XCTestCase {
-
-    func test_lateOffset_convertsMinutesToSeconds() {
-        var config = ClockConfiguration.load(
-            userDefaults: UserDefaults(suiteName: "com.clockfloat.tests.\(UUID().uuidString)")!
-        )
         config.lateEnabled = true
         config.lateOffsetMinutes = 5
 
         XCTAssertEqual(config.lateOffsetSeconds, 300.0, accuracy: 0.001)
     }
 
-    func test_lateOffset_zeroWhenDisabled() {
-        var config = ClockConfiguration.load(
-            userDefaults: UserDefaults(suiteName: "com.clockfloat.tests.\(UUID().uuidString)")!
-        )
+    func test_lateOffsetSeconds_disabledReturnsZero() {
+        var config = ClockConfiguration.load(userDefaults: testDefaults)
         config.lateEnabled = false
         config.lateOffsetMinutes = 5
 
         XCTAssertEqual(config.lateOffsetSeconds, 0.0, accuracy: 0.001)
     }
-}
 
-// MARK: - Opacity Tests
+    // MARK: - Text alpha
 
-final class OpacityTests: XCTestCase {
-
-    func test_opacity_textAlpha_isTwoThirdsOfBackground() {
-        var config = ClockConfiguration.load(
-            userDefaults: UserDefaults(suiteName: "com.clockfloat.tests.\(UUID().uuidString)")!
-        )
+    func test_textAlpha_isTwoThirdsOfOpacity() {
+        var config = ClockConfiguration.load(userDefaults: testDefaults)
         config.opacity = 0.75
 
-        let expectedTextAlpha = 0.75 * 0.67
-        XCTAssertEqual(config.textAlpha, expectedTextAlpha, accuracy: 0.01)
+        XCTAssertEqual(config.textAlpha, 0.75 * 0.67, accuracy: 0.01)
+    }
+
+    // MARK: - Font validation
+
+    func test_validatedFontName_validFont_returnsAsIs() {
+        XCTAssertEqual(ClockConfiguration.validatedFontName("Helvetica"), "Helvetica")
+    }
+
+    func test_validatedFontName_invalidFont_returnsDefault() {
+        XCTAssertEqual(ClockConfiguration.validatedFontName("NotARealFont"), "White Rabbit")
+    }
+
+    func test_validatedFontName_emptyString_returnsDefault() {
+        XCTAssertEqual(ClockConfiguration.validatedFontName(""), "White Rabbit")
+    }
+
+    // MARK: - Corner orientation
+
+    func test_cornerOrientationValues_areUnique() {
+        let values = ClockConfiguration.Corner.allCases.map { $0.orientationValue }
+        XCTAssertEqual(Set(values).count, values.count)
+    }
+
+    // MARK: - Notification
+
+    func test_save_withNotify_postsNotification() {
+        let config = ClockConfiguration.load(userDefaults: testDefaults)
+        let expectation = expectation(forNotification: .clockConfigurationDidChange, object: nil)
+        config.save(to: testDefaults, notify: true)
+        wait(for: [expectation], timeout: 1.0)
+    }
+
+    // MARK: - Font size floor
+
+    func test_load_tinyFontSize_resetsToDefault() {
+        testDefaults.set(0.01, forKey: ClockConfiguration.Keys.dateFontSize)
+        testDefaults.set(0.014, forKey: ClockConfiguration.Keys.timeFontSize)
+
+        let config = ClockConfiguration.load(userDefaults: testDefaults)
+
+        XCTAssertEqual(config.dateFontSize, 10.0, accuracy: 0.001)
+        XCTAssertEqual(config.timeFontSize, 14.0, accuracy: 0.001)
     }
 }

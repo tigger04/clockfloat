@@ -32,16 +32,24 @@ extension Notification.Name {
 
 // MARK: - HoverBehavior
 
-enum HoverBehavior: String {
+enum HoverBehavior: String, CaseIterable {
    case dodge   // move to opposite corner
    case hide    // fade out for 5s
    case none    // do nothing, draggable
+
+   var displayName: String {
+      switch self {
+      case .dodge: return "Dodge"
+      case .hide: return "Hide"
+      case .none: return "None"
+      }
+   }
 }
 
 // MARK: - ClockConfiguration
 
 struct ClockConfiguration {
-   enum Corner: String {
+   enum Corner: String, CaseIterable {
       case topLeft
       case topRight
       case bottomRight
@@ -57,6 +65,17 @@ struct ClockConfiguration {
          case .bottomLeft: return 3
          case .centerTop: return 4
          case .centerBottom: return 5
+         }
+      }
+
+      var displayName: String {
+         switch self {
+         case .topLeft: return "Top Left"
+         case .topRight: return "Top Right"
+         case .bottomRight: return "Bottom Right"
+         case .bottomLeft: return "Bottom Left"
+         case .centerTop: return "Centre Top"
+         case .centerBottom: return "Centre Bottom"
          }
       }
    }
@@ -93,7 +112,16 @@ struct ClockConfiguration {
       static let lateEnabled = "ClockLateEnabled"
       static let lateOffsetMinutes = "ClockLateOffsetMinutes"
       static let opacity = "ClockOpacity"
-      static let fontSizeMigrated = "ClockFontSizeMigrated"
+   }
+
+   private static let defaultFontName = "White Rabbit"
+
+   /// Validates font name; returns the default if the font cannot be resolved.
+   static func validatedFontName(_ name: String) -> String {
+      let trimmed = name.trimmingCharacters(in: .whitespaces)
+      if trimmed.isEmpty { return defaultFontName }
+      if NSFont(name: trimmed, size: 12) != nil { return trimmed }
+      return defaultFontName
    }
 
    // MARK: - Load
@@ -101,10 +129,10 @@ struct ClockConfiguration {
    static func load(userDefaults: UserDefaults = .standard) -> ClockConfiguration {
       userDefaults.register(defaults: [
          Keys.fontName: "White Rabbit",
-         Keys.dateFontSize: 0.01,
-         Keys.timeFontSize: 0.014,
+         Keys.dateFontSize: 10.0,
+         Keys.timeFontSize: 14.0,
          Keys.initialCorner: Corner.bottomRight.rawValue,
-         Keys.hoverBehavior: HoverBehavior.dodge.rawValue,
+         Keys.hoverBehavior: HoverBehavior.none.rawValue,
          Keys.timeFormat: "HH:mm",
          Keys.dateFormat: "E d",
          Keys.lateEnabled: true,
@@ -113,31 +141,21 @@ struct ClockConfiguration {
       ])
 
       let fontName = userDefaults.string(forKey: Keys.fontName) ?? "White Rabbit"
-      var dateSize = userDefaults.object(forKey: Keys.dateFontSize) as? Double ?? 0.01
-      var timeSize = userDefaults.object(forKey: Keys.timeFontSize) as? Double ?? 0.014
+      var dateSize = userDefaults.object(forKey: Keys.dateFontSize) as? Double ?? 10.0
+      var timeSize = userDefaults.object(forKey: Keys.timeFontSize) as? Double ?? 14.0
       let cornerRaw = userDefaults.string(forKey: Keys.initialCorner) ?? Corner.bottomRight.rawValue
       let corner = Corner(rawValue: cornerRaw) ?? .bottomRight
-      let behaviorRaw = userDefaults.string(forKey: Keys.hoverBehavior) ?? HoverBehavior.dodge.rawValue
-      let behavior = HoverBehavior(rawValue: behaviorRaw) ?? .dodge
+      let behaviorRaw = userDefaults.string(forKey: Keys.hoverBehavior) ?? HoverBehavior.none.rawValue
+      let behavior = HoverBehavior(rawValue: behaviorRaw) ?? .none
       let timeFormat = userDefaults.string(forKey: Keys.timeFormat) ?? "HH:mm"
       let dateFormat = userDefaults.string(forKey: Keys.dateFormat) ?? "E d"
       let lateEnabled = userDefaults.object(forKey: Keys.lateEnabled) as? Bool ?? true
       let lateMinutes = userDefaults.object(forKey: Keys.lateOffsetMinutes) as? Int ?? 3
       let opacity = userDefaults.object(forKey: Keys.opacity) as? Double ?? 0.75
 
-      // Migrate ratio-based font sizes to absolute point sizes
-      if !userDefaults.bool(forKey: Keys.fontSizeMigrated) && dateSize < 1.0 && timeSize < 1.0 {
-         let screenHeight = NSScreen.main?.visibleFrame.height ?? 1055.0
-         let baseFont = NSFont(name: fontName, size: 20) ?? NSFont.monospacedDigitSystemFont(ofSize: 20, weight: .regular)
-         let pixelsPerPoint = baseFont.boundingRectForFont.height / baseFont.pointSize
-
-         dateSize = screenHeight * dateSize / pixelsPerPoint
-         timeSize = screenHeight * timeSize / pixelsPerPoint
-
-         userDefaults.set(dateSize, forKey: Keys.dateFontSize)
-         userDefaults.set(timeSize, forKey: Keys.timeFontSize)
-         userDefaults.set(true, forKey: Keys.fontSizeMigrated)
-      }
+      // Guard against legacy ratio-based values (< 1.0 point)
+      if dateSize < 1.0 { dateSize = 10.0 }
+      if timeSize < 1.0 { timeSize = 14.0 }
 
       return ClockConfiguration(fontName: fontName,
                                 dateFontSize: dateSize,
@@ -153,7 +171,7 @@ struct ClockConfiguration {
 
    // MARK: - Save
 
-   func save(to userDefaults: UserDefaults = .standard) {
+   func save(to userDefaults: UserDefaults = .standard, notify: Bool = true) {
       userDefaults.set(fontName, forKey: Keys.fontName)
       userDefaults.set(dateFontSize, forKey: Keys.dateFontSize)
       userDefaults.set(timeFontSize, forKey: Keys.timeFontSize)
@@ -164,9 +182,10 @@ struct ClockConfiguration {
       userDefaults.set(lateEnabled, forKey: Keys.lateEnabled)
       userDefaults.set(lateOffsetMinutes, forKey: Keys.lateOffsetMinutes)
       userDefaults.set(opacity, forKey: Keys.opacity)
-      userDefaults.set(true, forKey: Keys.fontSizeMigrated)
 
-      NotificationCenter.default.post(name: .clockConfigurationDidChange, object: nil)
+      if notify {
+         NotificationCenter.default.post(name: .clockConfigurationDidChange, object: nil)
+      }
    }
 }
 
@@ -288,43 +307,20 @@ class Clock: NSObject, NSApplicationDelegate {
       _ = CTFontManagerRegisterFontsForURL(fontURL as CFURL, .process, nil)
    }
 
-   func initLabel(font: String, fontHeight: Double, screen: NSScreen, format: String, interval: TimeInterval, dummytext: String) -> TickingTextField {
+   func initLabel(font: String, fontSize: Double, screen: NSScreen, format: String, interval: TimeInterval, dummytext: String) -> TickingTextField {
 
       let formatter = DateFormatter()
       formatter.dateFormat = format
       formatter.locale = Locale.autoupdatingCurrent
 
-//      let tmpLabel = NSTextField()
-//      tmpLabel.font = NSFont(name: font, size: 20)
-//      tmpLabel.isBezeled = false
-//      tmpLabel.isEditable = false
-//      tmpLabel.drawsBackground = false
-//      tmpLabel.alignment = .center
-//      tmpLabel.stringValue = dummytext
-
-      let baseFont = NSFont(name: font, size: 20) ?? NSFont.monospacedDigitSystemFont(ofSize: 20, weight: .regular)
-      let pixelsPerPoint = baseFont.boundingRectForFont.height / baseFont.pointSize
-//      let tmpLabelHeight = tmpLabel.frame.height
-//      let pixelsPerPoint = Double(tmpLabelHeight) / 20.0
-
       let label = TickingTextField()
-
-      if fontHeight < 1.0 {
-         let resolvedFontSize = screen.visibleFrame.height * fontHeight / pixelsPerPoint
-         label.font = NSFont(name: font, size: resolvedFontSize) ?? NSFont.monospacedDigitSystemFont(ofSize: resolvedFontSize, weight: .regular)
-      }
-      else {
-         label.font = NSFont(name: font, size: fontHeight) ?? NSFont.monospacedDigitSystemFont(ofSize: fontHeight, weight: .regular)
-      }
-
+      label.font = NSFont(name: font, size: fontSize) ?? NSFont.monospacedDigitSystemFont(ofSize: fontSize, weight: .regular)
       label.isBezeled = false
       label.isEditable = false
       label.drawsBackground = false
       label.alignment = .center
       label.stringValue = dummytext
-
       label.textColor = NSColor(red: 1, green: 1, blue: 1, alpha: self.configuration.textAlpha)
-//        label.sizeToFit()
 
       label.timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
          label.stringValue = formatter.string(from: Date().addingTimeInterval(self.late))
@@ -348,13 +344,9 @@ class Clock: NSObject, NSApplicationDelegate {
    }
 
    func initDater(screen: NSScreen, stickWindow: EvasiveWindow) -> EvasiveWindow {
-//      if self.dateFontSize < 1.0 {
-//         self.dateFontSize = self.dateFontSize * screen.frame.height
-//      }
-
       let label = self.initLabel(
          font: self.dateFont,
-         fontHeight: self.dateFontSize,
+         fontSize: self.dateFontSize,
          screen: screen,
          format: self.configuration.dateFormat,
          interval: 10,
@@ -372,7 +364,7 @@ class Clock: NSObject, NSApplicationDelegate {
    func initTimer(screen: NSScreen) -> EvasiveWindow {
       let label = self.initLabel(
          font: self.timeFont,
-         fontHeight: self.timeFontSize,
+         fontSize: self.timeFontSize,
          screen: screen,
          format: self.configuration.timeFormat,
          interval: 1,
